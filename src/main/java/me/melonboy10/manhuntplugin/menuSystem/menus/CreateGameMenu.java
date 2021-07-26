@@ -5,6 +5,7 @@ import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.maps.ImageMapRenderer;
 import me.melonboy10.manhuntplugin.maps.MapListener;
 import me.melonboy10.manhuntplugin.menuSystem.Menu;
+import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class CreateGameMenu extends Menu {
@@ -51,8 +53,38 @@ public class CreateGameMenu extends Menu {
         Player player = (Player) event.getWhoClicked();
         switch (event.getSlot()) {
             case 10 -> {
+                ManhuntGame.worldType = getNextWorldType(ManhuntGame.worldType);
+                setMenuItems();
+            }
+            case 11 -> {
                 ManhuntGame.difficulty = getNextDifficulty(ManhuntGame.difficulty);
                 setMenuItems();
+            }
+            case 12 -> {
+                switch (event.getClick()) {
+                    case LEFT, SHIFT_LEFT, MIDDLE, DROP, CONTROL_DROP, CREATIVE, SWAP_OFFHAND -> {
+                        player.closeInventory();
+                        AnvilGUI.Builder builder = new AnvilGUI.Builder();
+                        builder.itemLeft(new ItemStack(Material.PAPER))
+                                .text("Enter Seed")
+                                .title("Enter the world seed!")
+                                .plugin(plugin)
+                                .onComplete((player1, text) -> {
+                                    try {
+                                        ManhuntGame.seed = Long.parseLong(text);
+                                        ManhuntGame.creationMenu.setMenuItems();
+                                        return AnvilGUI.Response.openInventory(ManhuntGame.creationMenu.getInventory());
+                                    } catch (Exception e) {
+                                        return AnvilGUI.Response.text(ChatColor.RED + "That was not a number!");
+                                    }
+                                })
+                                .open(player);
+                    }
+                    case RIGHT, SHIFT_RIGHT -> {
+                        ManhuntGame.seed = new Random().nextLong();
+                        setMenuItems();
+                    }
+                }
             }
             case 13 -> {
                 ItemStack map = new ItemStack(Material.FILLED_MAP);
