@@ -107,6 +107,12 @@ public class CreateGameMenu extends Menu {
                 player.closeInventory();
                 MapListener.addPlayer(player);
             }
+            case 14 -> {
+
+            }
+            case 16 -> {
+
+            }
         }
     }
 
@@ -160,6 +166,8 @@ public class CreateGameMenu extends Menu {
             inventory.setItem(13, createMapItem());
         }
 
+        inventory.setItem(16, makeItem(Material.LIME_TERRACOTTA, ChatColor.GREEN + "Create World"));
+
         setFillerGlass();
         seed = ManhuntGame.seed;
         worldType = ManhuntGame.worldType;
@@ -204,7 +212,7 @@ public class CreateGameMenu extends Menu {
         try {
             new ProcessBuilder(finder.getAbsolutePath(),
                         String.valueOf(ManhuntGame.seed),
-                        ManhuntGame.worldType.equals(WorldType.LARGE_BIOMES) ? "largeBiomes" : ""
+                        ManhuntGame.worldType.equals(WorldType.LARGE_BIOMES) ? "--largeBiomes" : ""
                     )
                     .redirectOutput(rgbValues)
                     .start()
