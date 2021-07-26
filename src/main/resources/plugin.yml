@@ -1,0 +1,11 @@
+name: ManhuntPlugin
+version: ${project.version}
+main: me.melonboy10.manhuntplugin.ManhuntPlugin
+api-version: 1.17
+authors: [melonboy10]
+description: Manhunt plugin
+
+commands:
+    create:
+        description: Start a manhunt.
+        usage: /create
