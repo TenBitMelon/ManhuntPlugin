@@ -237,7 +237,7 @@ public class CreateGameMenu extends Menu {
         }
 
 
-        BufferedImage itemImage = mapImage.getSubimage(16, 16, 64, 64);
+        BufferedImage itemImage = mapImage.getSubimage(32, 32, 64, 64);
         try {//                                                ManhuntData        Plugins        Server      ""
             ImageIO.write(itemImage, "PNG", new File(plugin.getDataFolder().getParentFile().getAbsoluteFile().getParentFile().toPath() + "/server-icon.png"));
             Bukkit.getServer().loadServerIcon(itemImage);
