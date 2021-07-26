@@ -2,17 +2,33 @@ package me.melonboy10.manhuntplugin.menuSystem.menus;
 
 import me.melonboy10.manhuntplugin.ManhuntGame;
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
+import me.melonboy10.manhuntplugin.maps.ImageMapRenderer;
+import me.melonboy10.manhuntplugin.maps.MapListener;
 import me.melonboy10.manhuntplugin.menuSystem.Menu;
 import org.bukkit.*;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.MapMeta;
+import org.bukkit.map.MapView;
+import org.bukkit.persistence.PersistentDataType;
 
-import java.util.Random;
+import java.awt.*;
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class CreateGameMenu extends Menu {
+
+    private long seed;
+    private BufferedImage mapImage;
 
     public CreateGameMenu(ManhuntPlugin plugin) {
         super(plugin);
@@ -30,7 +46,28 @@ public class CreateGameMenu extends Menu {
 
     @Override
     public void clickEvent(InventoryClickEvent event) {
+        Player player = (Player) event.getWhoClicked();
+        switch (event.getSlot()) {
+            case 13 -> {
+                ItemStack map = new ItemStack(Material.FILLED_MAP);
+                MapMeta mapMeta = (MapMeta) map.getItemMeta();
 
+                mapMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, "viewing-map"), PersistentDataType.INTEGER, 1);
+
+                MapView view = Bukkit.createMap(player.getWorld());
+                view.setTrackingPosition(false);
+                view.setUnlimitedTracking(false);
+                view.setLocked(true);
+                view.getRenderers().clear();
+                view.addRenderer(new ImageMapRenderer(mapImage, plugin));
+                mapMeta.setMapView(view);
+
+                map.setItemMeta(mapMeta);
+                player.getInventory().setItemInMainHand(map);
+                player.closeInventory();
+                MapListener.addPlayer(player);
+            }
+        }
     }
 
     @Override
@@ -75,18 +112,16 @@ public class CreateGameMenu extends Menu {
                 ChatColor.AQUA + "Set Seed:",
                 ChatColor.GRAY + "" + ManhuntGame.seed,
                 "",
-                ChatColor.YELLOW + "Click to change!"
+                ChatColor.YELLOW + "Click to change!",
+                ChatColor.YELLOW + "Right-Click to randomize!"
             ));
 
-        inventory.setItem(13, makeItem(Material.FILLED_MAP, ChatColor.YELLOW + "World Preview",
-                ""
-            ));
-
-        try {
-            magic();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (this.seed != ManhuntGame.seed) {
+            inventory.setItem(13, createMapItem());
         }
+
+        setFillerGlass();
+        seed = ManhuntGame.seed;
     }
 
     private WorldType getNextWorldType(WorldType type) {
@@ -103,34 +138,62 @@ public class CreateGameMenu extends Menu {
         }
     }
 
-    private void magic() throws Exception {
-//        Class<?> clazz = Class.forName("BiomeManager");
-//        Object managerObj = clazz.newInstance();
-//
-//        Class<?> clazz2 = Class.forName("BlockPos");
-//        Constructor<?> blockPosConstructor = clazz2.getConstructor();
-//
-//        Method getBiome = clazz.getMethod("getBiome");
-//        System.out.println(getBiome.invoke(blockPosConstructor.newInstance(0, 0, 0)));
-//
-//        ChunkGenerator gen = new ChunkGenerator() {
-//            BiomeGrid[][] biomes;
-//
-//            @Override
-//            public ChunkData generateChunkData(World world, Random random, int x, int z, BiomeGrid biome) {
-//                if (-8 < x && x < 8 && -8 < z && z < 8) {
-//                    biomes[x][z] = biome;
-//                    biome.getBiome(1, 1, 1);
-//                }
-//                return null;
-//            }
-//        };
+    private ItemStack createMapItem() {
 
-        String url = "https://www.chunkbase.com/apps/biome-finder#" + new Random().nextLong();
-        Document document = Jsoup.connect(url).get();
-        Element canvas = document.body().select("#map-canvas").get(0);
+        File finder = new File(plugin.getDataFolder().getPath() + "/generateMapPreview");
+        File rgbValues = new File(plugin.getDataFolder().getPath() + "/image.txt");
+
+        try {
+            new ProcessBuilder(finder.getAbsolutePath(), String.valueOf(ManhuntGame.seed))
+                    .redirectOutput(rgbValues)
+                    .start()
+                    .waitFor(10, TimeUnit.SECONDS);
+
+            List<Color> rgbArray = new ArrayList<>();
+
+            for (String line : Files.readAllLines(rgbValues.toPath())) {
+                String[] data = line.split(",");
+                rgbArray.add(new Color(Integer.parseInt(data[0]), Integer.parseInt(data[1]), Integer.parseInt(data[2])));
+            }
+
+            BufferedImage image = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
+            for (int i = 0; i < rgbArray.size(); i++) {
+                image.setRGB(i % 128, i / 128 % 128, rgbArray.get(i).getRGB());
+            }
+
+            mapImage = image;
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
 
 
 
+
+
+
+        BufferedImage itemImage = mapImage.getSubimage(16, 16, 64, 64);
+        BufferedImage itemImage16 = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+        itemImage16.getGraphics().drawImage(itemImage, 0, 0, 16, 16, null);
+
+        ArrayList<Color> rgb = new ArrayList<>();
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < 16; j++) {
+                rgb.add(new Color(itemImage16.getRGB(i, j)));
+            }
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (Color color : rgb) {
+            builder.append(net.md_5.bungee.api.ChatColor.of(color) + "");
+        }
+
+        return makeItem(Material.FILLED_MAP, ChatColor.YELLOW + "World Preview",
+                "World",
+                "",
+                "",
+                "",
+                ChatColor.YELLOW + "Click to enlarge!"
+        );
     }
 }

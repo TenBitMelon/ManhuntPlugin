@@ -2,10 +2,7 @@ package me.melonboy10.manhuntplugin;
 
 import me.melonboy10.manhuntplugin.menuSystem.Menu;
 import me.melonboy10.manhuntplugin.menuSystem.menus.CreateGameMenu;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Difficulty;
-import org.bukkit.WorldType;
+import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -20,6 +17,7 @@ public final class ManhuntGame {
     public static boolean worldGenerating = false;
 
     public static Menu creationMenu;
+    public static World world;
     public static WorldType worldType;
     public static Difficulty difficulty;
     public static long seed;
