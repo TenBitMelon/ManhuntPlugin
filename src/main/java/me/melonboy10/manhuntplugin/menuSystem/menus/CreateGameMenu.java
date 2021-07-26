@@ -7,6 +7,7 @@ import me.melonboy10.manhuntplugin.maps.MapListener;
 import me.melonboy10.manhuntplugin.menuSystem.Menu;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
@@ -14,6 +15,7 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
 import org.bukkit.persistence.PersistentDataType;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -48,6 +50,10 @@ public class CreateGameMenu extends Menu {
     public void clickEvent(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
         switch (event.getSlot()) {
+            case 10 -> {
+                ManhuntGame.difficulty = getNextDifficulty(ManhuntGame.difficulty);
+                setMenuItems();
+            }
             case 13 -> {
                 ItemStack map = new ItemStack(Material.FILLED_MAP);
                 MapMeta mapMeta = (MapMeta) map.getItemMeta();
@@ -138,6 +144,23 @@ public class CreateGameMenu extends Menu {
         }
     }
 
+    private Difficulty getNextDifficulty(Difficulty difficulty) {
+        switch (difficulty) {
+            case EASY -> {
+                return Difficulty.NORMAL;
+            }
+            case NORMAL -> {
+                return Difficulty.HARD;
+            }
+            case HARD -> {
+                return Difficulty.PEACEFUL;
+            }
+            default -> {
+                return Difficulty.EASY;
+            }
+        }
+    }
+
     private ItemStack createMapItem() {
 
         File finder = new File(plugin.getDataFolder().getPath() + "/generateMapPreview");
@@ -173,6 +196,13 @@ public class CreateGameMenu extends Menu {
 
 
         BufferedImage itemImage = mapImage.getSubimage(16, 16, 64, 64);
+        try {//                                                ManhuntData        Plugins        Server      ""
+            ImageIO.write(itemImage, "PNG", new File(plugin.getDataFolder().getParentFile().getAbsoluteFile().getParentFile().toPath() + "/server-icon.png"));
+            Bukkit.getServer().loadServerIcon(itemImage);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         BufferedImage itemImage16 = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
         itemImage16.getGraphics().drawImage(itemImage, 0, 0, 16, 16, null);
 
