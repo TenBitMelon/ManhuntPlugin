@@ -8,9 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerChangedMainHandEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -57,13 +55,12 @@ public class MapListener implements Listener {
     @EventHandler
     public void onDrop(PlayerDropItemEvent event) {
         if (checkItem(event.getItemDrop().getItemStack(), event.getPlayer())) {
-            event.setCancelled(true);
-            event.getPlayer().getInventory().remove(Material.FILLED_MAP);
+            event.getItemDrop().remove();
         }
     }
 
     @EventHandler
-    public void onSwitch(PlayerChangedMainHandEvent event) {
+    public void onSwitch(PlayerItemHeldEvent event) {
         if (playersWithItem.contains(event.getPlayer())) {
             event.getPlayer().getInventory().remove(Material.FILLED_MAP);
             playersWithItem.remove(event.getPlayer());
