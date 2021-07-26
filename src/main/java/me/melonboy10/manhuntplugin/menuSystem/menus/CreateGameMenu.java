@@ -12,6 +12,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
 import org.bukkit.persistence.PersistentDataType;
@@ -33,6 +34,7 @@ public class CreateGameMenu extends Menu {
 
     private long seed;
     private BufferedImage mapImage;
+    private WorldType worldType;
 
     public CreateGameMenu(ManhuntPlugin plugin) {
         super(plugin);
@@ -154,12 +156,13 @@ public class CreateGameMenu extends Menu {
                 ChatColor.YELLOW + "Right-Click to randomize!"
             ));
 
-        if (this.seed != ManhuntGame.seed) {
+        if (this.seed != ManhuntGame.seed || this.worldType != ManhuntGame.worldType) {
             inventory.setItem(13, createMapItem());
         }
 
         setFillerGlass();
         seed = ManhuntGame.seed;
+        worldType = ManhuntGame.worldType;
     }
 
     private WorldType getNextWorldType(WorldType type) {
@@ -199,7 +202,10 @@ public class CreateGameMenu extends Menu {
         File rgbValues = new File(plugin.getDataFolder().getPath() + "/image.txt");
 
         try {
-            new ProcessBuilder(finder.getAbsolutePath(), String.valueOf(ManhuntGame.seed))
+            new ProcessBuilder(finder.getAbsolutePath(),
+                        String.valueOf(ManhuntGame.seed),
+                        ManhuntGame.worldType.equals(WorldType.LARGE_BIOMES) ? "largeBiomes" : ""
+                    )
                     .redirectOutput(rgbValues)
                     .start()
                     .waitFor(10, TimeUnit.SECONDS);
@@ -223,10 +229,6 @@ public class CreateGameMenu extends Menu {
         }
 
 
-
-
-
-
         BufferedImage itemImage = mapImage.getSubimage(16, 16, 64, 64);
         try {//                                                ManhuntData        Plugins        Server      ""
             ImageIO.write(itemImage, "PNG", new File(plugin.getDataFolder().getParentFile().getAbsoluteFile().getParentFile().toPath() + "/server-icon.png"));
@@ -241,21 +243,31 @@ public class CreateGameMenu extends Menu {
         ArrayList<Color> rgb = new ArrayList<>();
         for (int i = 0; i < 16; i++) {
             for (int j = 0; j < 16; j++) {
-                rgb.add(new Color(itemImage16.getRGB(i, j)));
+                rgb.add(new Color(itemImage16.getRGB(j, i)));
             }
         }
 
         StringBuilder builder = new StringBuilder();
-        for (Color color : rgb) {
-            builder.append(net.md_5.bungee.api.ChatColor.of(color) + "");
+        ArrayList<String> worldLore = new ArrayList<>();
+
+        for (int i = 0, rgbSize = rgb.size(); i < rgbSize; i++) {
+            if (i % 16 == 0) {
+                worldLore.add(builder.toString());
+                builder = new StringBuilder();
+            }
+            Color color = rgb.get(i);
+            builder.append(net.md_5.bungee.api.ChatColor.of(color) + "█");
         }
 
-        return makeItem(Material.FILLED_MAP, ChatColor.YELLOW + "World Preview",
-                "World",
-                "",
-                "",
-                "",
-                ChatColor.YELLOW + "Click to enlarge!"
-        );
+        ItemStack item = new ItemStack(Material.FILLED_MAP);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(ChatColor.YELLOW + "World Preview");
+
+        worldLore.set(0, ChatColor.DARK_GRAY + "Generation");
+        worldLore.add(ChatColor.YELLOW + "Click to enlarge!");
+        meta.setLore(worldLore);
+        item.setItemMeta(meta);
+
+        return item;
     }
 }
