@@ -6,6 +6,7 @@ import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public final class ManhuntGame {
@@ -17,10 +18,16 @@ public final class ManhuntGame {
     public static boolean worldGenerating = false;
 
     public static Menu creationMenu;
+    public static Menu teamsMenu;
+
     public static World world;
     public static WorldType worldType;
     public static Difficulty difficulty;
     public static long seed;
+
+    public static ArrayList<Player> runners = new ArrayList<>();
+    public static ArrayList<Player> hunters = new ArrayList<>();
+    public static ArrayList<Player> spectators = new ArrayList<>();
 
     public ManhuntGame(ManhuntPlugin plugin) {
         ManhuntGame.plugin = plugin;

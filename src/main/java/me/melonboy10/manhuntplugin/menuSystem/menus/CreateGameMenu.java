@@ -5,10 +5,13 @@ import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.maps.ImageMapRenderer;
 import me.melonboy10.manhuntplugin.maps.MapListener;
 import me.melonboy10.manhuntplugin.menuSystem.Menu;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
@@ -18,10 +21,8 @@ import org.bukkit.map.MapView;
 import org.bukkit.persistence.PersistentDataType;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -72,13 +73,9 @@ public class CreateGameMenu extends Menu {
                                 .title("Enter the world seed!")
                                 .plugin(plugin)
                                 .onComplete((player1, text) -> {
-                                    try {
-                                        ManhuntGame.seed = Long.parseLong(text);
-                                        ManhuntGame.creationMenu.setMenuItems();
-                                        return AnvilGUI.Response.openInventory(ManhuntGame.creationMenu.getInventory());
-                                    } catch (Exception e) {
-                                        return AnvilGUI.Response.text(ChatColor.RED + "That was not a number!");
-                                    }
+                                    ManhuntGame.seed = text.hashCode();
+                                    ManhuntGame.creationMenu.setMenuItems();
+                                    return AnvilGUI.Response.openInventory(ManhuntGame.creationMenu.getInventory());
                                 })
                                 .open(player);
                     }
@@ -94,7 +91,9 @@ public class CreateGameMenu extends Menu {
 
                 mapMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, "viewing-map"), PersistentDataType.INTEGER, 1);
 
-                MapView view = Bukkit.createMap(player.getWorld());
+                MapView view = Bukkit.getMap(0);
+                if (view == null)
+                    view = Bukkit.createMap(Bukkit.getWorld("world"));
                 view.setTrackingPosition(false);
                 view.setUnlimitedTracking(false);
                 view.setLocked(true);
@@ -111,9 +110,61 @@ public class CreateGameMenu extends Menu {
 
             }
             case 16 -> {
+//                ManhuntGame.world = new WorldCreator(String.valueOf(new Random().nextInt()))
+//                        .type(ManhuntGame.worldType)
+//                        .seed(ManhuntGame.seed)
+//                        .createWorld();
+//                for (HumanEntity viewer : this.getInventory().getViewers()) {
+//                    viewer.closeInventory();
+//                    viewer.openInventory(ManhuntGame.teamsMenu.getInventory());
+//                }
+                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                    TextComponent part1 = new TextComponent(ChatColor.GREEN + "A Manhunt world is being created. Join a team by typing");
+                    TextComponent command = new TextComponent(ChatColor.GREEN + " /teams ");
+                    TextComponent part2 = new TextComponent(ChatColor.GREEN + "or by clicking");
+                    TextComponent menuLink = new TextComponent(ChatColor.GREEN + " here");
 
+//                    tec("+-----------------------------------------+");
+//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   |");
+//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+//                        "Online Players:" + ChatColor.DARK_GRAY + "                               ." + ChatColor.YELLOW + "|");
+//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+//                        "melonboy10, Enderlord0042, Pick3lbo1,        |");
+//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+//                        "Minecraft_Atom, Derftcahuji                  .|");
+//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+//                        "|");
+//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+//                        "A World is Being Generated!                  .|");
+//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+//                        "Join a team below or by clicking here!       .|");
+//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+//                        "|");
+//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+//                        "Runners - 1  Hunters - 1  Spectators - 3  |");
+//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+//                        "|");
+//                    tec("+-----------------------------------------+");
+
+
+                    command.setHoverEvent(
+                            new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                            new ComponentBuilder(ChatColor.YELLOW + "" + ChatColor.BOLD + " /teams ").create())
+                    );
+                    part1.addExtra(command);
+
+//                    menuLink.setClickEvent(
+////                            new ClickEvent()
+//                    );
+
+                    onlinePlayer.spigot().sendMessage(part1);
+                }
             }
         }
+    }
+
+    private TextComponent tec(String string) {
+        return new TextComponent(string);
     }
 
     @Override
