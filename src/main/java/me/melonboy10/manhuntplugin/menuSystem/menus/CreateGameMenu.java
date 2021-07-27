@@ -73,7 +73,11 @@ public class CreateGameMenu extends Menu {
                                 .title("Enter the world seed!")
                                 .plugin(plugin)
                                 .onComplete((player1, text) -> {
-                                    ManhuntGame.seed = text.hashCode();
+                                    try {
+                                        ManhuntGame.seed = Long.parseLong(text);
+                                    } catch (Exception e) {
+                                        ManhuntGame.seed = text.hashCode();
+                                    }
                                     ManhuntGame.creationMenu.setMenuItems();
                                     return AnvilGUI.Response.openInventory(ManhuntGame.creationMenu.getInventory());
                                 })
@@ -124,27 +128,27 @@ public class CreateGameMenu extends Menu {
                     TextComponent part2 = new TextComponent(ChatColor.GREEN + "or by clicking");
                     TextComponent menuLink = new TextComponent(ChatColor.GREEN + " here");
 
-//                    tec("+-----------------------------------------+");
-//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   |");
-//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-//                        "Online Players:" + ChatColor.DARK_GRAY + "                               ." + ChatColor.YELLOW + "|");
-//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-//                        "melonboy10, Enderlord0042, Pick3lbo1,        |");
-//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-//                        "Minecraft_Atom, Derftcahuji                  .|");
-//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-//                        "|");
-//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-//                        "A World is Being Generated!                  .|");
-//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-//                        "Join a team below or by clicking here!       .|");
-//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-//                        "|");
-//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-//                        "Runners - 1  Hunters - 1  Spectators - 3  |");
-//                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-//                        "|");
-//                    tec("+-----------------------------------------+");
+                    tec("+-----------------------------------------+").setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   |");
+                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+                        "Online Players:" + ChatColor.DARK_GRAY + "                               ." + ChatColor.YELLOW + "|");
+                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+                        "melonboy10, Enderlord0042, Pick3lbo1,        |");
+                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+                        "Minecraft_Atom, Derftcahuji                  .|");
+                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+                        "|");
+                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+                        "A World is Being Generated!                  .|");
+                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+                        "Join a team below or by clicking here!       .|");
+                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+                        "|");
+                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+                        "Runners - 1  Hunters - 1  Spectators - 3  |");
+                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
+                        "|");
+                    tec("+-----------------------------------------+");
 
 
                     command.setHoverEvent(
