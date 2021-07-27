@@ -36,7 +36,12 @@ public class JoinTeamMenu extends Menu {
     @Override
     public void setMenuItems() {
 
-        inventory.setItem(11, makeItem(Material.CLOCK, ChatColor.YELLOW + "Runners"));
+        inventory.setItem(11, makeItem(Material.CLOCK, ChatColor.YELLOW + "Runners",
+                ChatColor.DARK_GRAY + "Players",
+                "",
+                ChatColor.AQUA + "Players on Team:",
+                ""
+            ));
 
         inventory.setItem(13, makeItem(Material.COMPASS, ChatColor.YELLOW + "Hunters"));
 
