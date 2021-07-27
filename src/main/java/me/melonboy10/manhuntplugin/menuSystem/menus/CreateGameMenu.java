@@ -23,6 +23,7 @@ import org.bukkit.persistence.PersistentDataType;
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.awt.print.Paper;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -114,61 +115,9 @@ public class CreateGameMenu extends Menu {
 
             }
             case 16 -> {
-//                ManhuntGame.world = new WorldCreator(String.valueOf(new Random().nextInt()))
-//                        .type(ManhuntGame.worldType)
-//                        .seed(ManhuntGame.seed)
-//                        .createWorld();
-//                for (HumanEntity viewer : this.getInventory().getViewers()) {
-//                    viewer.closeInventory();
-//                    viewer.openInventory(ManhuntGame.teamsMenu.getInventory());
-//                }
-                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                    TextComponent part1 = new TextComponent(ChatColor.GREEN + "A Manhunt world is being created. Join a team by typing");
-                    TextComponent command = new TextComponent(ChatColor.GREEN + " /teams ");
-                    TextComponent part2 = new TextComponent(ChatColor.GREEN + "or by clicking");
-                    TextComponent menuLink = new TextComponent(ChatColor.GREEN + " here");
-
-                    tec("+-----------------------------------------+").setColor(net.md_5.bungee.api.ChatColor.YELLOW);
-                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   |");
-                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "Online Players:" + ChatColor.DARK_GRAY + "                               ." + ChatColor.YELLOW + "|");
-                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "melonboy10, Enderlord0042, Pick3lbo1,        |");
-                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "Minecraft_Atom, Derftcahuji                  .|");
-                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "|");
-                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "A World is Being Generated!                  .|");
-                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "Join a team below or by clicking here!       .|");
-                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "|");
-                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "Runners - 1  Hunters - 1  Spectators - 3  |");
-                    tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "|");
-                    tec("+-----------------------------------------+");
-
-
-                    command.setHoverEvent(
-                            new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                            new ComponentBuilder(ChatColor.YELLOW + "" + ChatColor.BOLD + " /teams ").create())
-                    );
-                    part1.addExtra(command);
-
-//                    menuLink.setClickEvent(
-////                            new ClickEvent()
-//                    );
-
-                    onlinePlayer.spigot().sendMessage(part1);
-                }
+                ManhuntGame.startWorldGen();
             }
         }
-    }
-
-    private TextComponent tec(String string) {
-        return new TextComponent(string);
     }
 
     @Override
@@ -284,13 +233,11 @@ public class CreateGameMenu extends Menu {
             for (int i = 0; i < rgbArray.size(); i++) {
                 image.setRGB(i % 128, i / 128 % 128, rgbArray.get(i).getRGB());
             }
-
             mapImage = image;
 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-
 
         BufferedImage itemImage = mapImage.getSubimage(32, 32, 64, 64);
         try {//                                                ManhuntData        Plugins        Server      ""
