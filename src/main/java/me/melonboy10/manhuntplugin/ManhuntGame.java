@@ -2,14 +2,17 @@ package me.melonboy10.manhuntplugin;
 
 import me.melonboy10.manhuntplugin.menuSystem.Menu;
 import me.melonboy10.manhuntplugin.menuSystem.menus.CreateGameMenu;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.*;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MinecraftFont;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 public final class ManhuntGame {
@@ -123,9 +126,9 @@ public final class ManhuntGame {
 
         ArrayList<String> players = new ArrayList<>(){{
             for (Player player : Bukkit.getOnlinePlayers()) {
-                if (ManhuntGame.runners.contains(player)) {
+                if (runners.contains(player)) {
                     add(ChatColor.GREEN + player.getName());
-                } else if (ManhuntGame.hunters.contains(player)) {
+                } else if (hunters.contains(player)) {
                     add(ChatColor.RED + player.getName());
                 } else {
                     add(ChatColor.GRAY + player.getName());
@@ -139,7 +142,7 @@ public final class ManhuntGame {
          * + - 5    - - 5   " "- 3
          */
 
-        StringBuilder previousPlayerStack = new StringBuilder(".|   " + players.get(0));
+        /*StringBuilder previousPlayerStack = new StringBuilder(".|   " + players.get(0));
         players.remove(0);
         for (String player : players) {
             if (MinecraftFont.Font.getWidth(previousPlayerStack + player) < 257) {
@@ -163,23 +166,61 @@ public final class ManhuntGame {
         TextComponent part9  = tec(".|                                                 |");
         TextComponent part10 = tec(".|   Runners - 1  Hunters - 1  Spectators - 3  |");
         TextComponent part11 = tec(".|                                                 |");
-        TextComponent part12 = tec("+-----------------------------------------+");
+        TextComponent part12 = tec("+-----------------------------------------+");*/
 
-        ArrayList<String> output = new ArrayList<>(){{
-            add("");
-            add("Online Players:");
-            add("melonboy10, Enderlord0042, Pick3lbo1, Minecraft_Atom, Derftcahuji");
-            add("");
-            add("A World is Being Generated!");
-            add("Join a team below or by clicking here!");
-            add("");
-            add("Runners - 1  Hunters - 1  Spectators - 3");
-            add("");
+        ArrayList<TextComponent> preset = new ArrayList<>(){{
+            add(componentToText(new ComponentBuilder("").create()));
+            add(componentToText(new ComponentBuilder(ChatColor.AQUA + "Online Players" + ChatColor.DARK_AQUA + ":").create()));
+            add(componentToText(new ComponentBuilder(players.stream().reduce((a, b) -> a + b).get()).create()));
+            add(componentToText(new ComponentBuilder("").create()));
+            add(componentToText(new ComponentBuilder(ChatColor.AQUA + "A World is Being Generated!").create()));
+            add(componentToText(new ComponentBuilder(ChatColor.AQUA + "Join a team below or by ")
+                .append("clicking here")
+                    .event(new HoverEvent(
+                        HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.GOLD + "/teams")
+                    ))
+                    .event(new ClickEvent(
+                            ClickEvent.Action.RUN_COMMAND, "/teams"
+                    ))
+                    .color(ChatColor.GOLD.asBungee())
+                .append(ChatColor.DARK_AQUA + "!")
+                .create()));
+            add(componentToText(new ComponentBuilder("").create()));
+            add(componentToText(new ComponentBuilder(ChatColor.GREEN + "Runners")
+                    .event(new HoverEvent(
+                            HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.GREEN + "Join runners")
+                    ))
+                    .event(new ClickEvent(
+                            ClickEvent.Action.RUN_COMMAND, "/teams runner"
+                    ))
+                    .append(ChatColor.DARK_GRAY + " - " + ChatColor.WHITE + runners.size())
+                    .append(ChatColor.RED +  "  Hunters")
+                    .event(new HoverEvent(
+                            HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.RED +  "Hunters")
+                    ))
+                    .event(new ClickEvent(
+                            ClickEvent.Action.RUN_COMMAND, "/teams hunter"
+                    ))
+                    .append(ChatColor.DARK_GRAY + " - " + ChatColor.WHITE + hunters.size())
+                    .append(ChatColor.GRAY + "  Spectators")
+                    .event(new HoverEvent(
+                            HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.GRAY + "Spectators")
+                    ))
+                    .event(new ClickEvent(
+                            ClickEvent.Action.RUN_COMMAND, "/teams spectator"
+                    ))
+                    .append(ChatColor.DARK_GRAY + " - " + ChatColor.WHITE + spectators.size())
+                    .create()
+            ));
+            add(componentToText(new ComponentBuilder("").create()));
         }};
 
+        ArrayList<TextComponent> output = new ArrayList<>();
 
+        for (TextComponent line : preset) {
+            formattedMessage(line, output);
+        }
 
-        for (Player player : Bukkit.getOnlinePlayers()) {
 //            onlinePlayer.spigot().sendMessage(part1);
 //            onlinePlayer.spigot().sendMessage(part2);
 //            onlinePlayer.spigot().sendMessage(part3);
@@ -192,32 +233,59 @@ public final class ManhuntGame {
 //            onlinePlayer.spigot().sendMessage(part10);
 //            onlinePlayer.spigot().sendMessage(part11);
 //            onlinePlayer.spigot().sendMessage(part12);
-            player.sendMessage("+-----------------------------------------+");
-            for (String line : output) {
-                formattedMessage(line, player);
+
+        for (TextComponent line : output) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                player.sendMessage(ChatColor.YELLOW + "+-----------------------------------------+");
+                player.spigot().sendMessage(line);
+                player.sendMessage(ChatColor.YELLOW + "+-----------------------------------------+");
             }
-            player.sendMessage("+-----------------------------------------+");
         }
+
     }
 
-    private static void formattedMessage(String line, Player player) {
-        int width = MinecraftFont.Font.getWidth(line);
+    private static void formattedMessage(TextComponent line, List<TextComponent> list) {
+        int width = MinecraftFont.Font.getWidth(ChatColor.stripColor(line.toPlainText()));
         int lineLength = 235;
         if (width > lineLength) {
-            String[] split = line.split(", ");
+            String[] split = line.getText().split(", ");
             String[] segments = split;
             while (width > lineLength) {
                 segments = Arrays.copyOf(segments, segments.length - 1);
-                width = MinecraftFont.Font.getWidth(Arrays.toString(segments).replaceAll("[\\[\\]]", ""));
+                width = MinecraftFont.Font.getWidth(ChatColor.stripColor(
+                    Arrays.toString(segments)
+                        .replaceAll("[\\[\\]]", "")
+                ));
             }
-            player.sendMessage(".|   " + Arrays.toString(segments).replaceAll("[\\[\\]]", "") + " ".repeat((lineLength - width) / 4) + ".".repeat((lineLength - width) % 4) + "|");
-            formattedMessage(Arrays.toString(Arrays.copyOfRange(split, split.length - segments.length + 1, split.length)).replaceAll("[\\[\\],]", ""), player);
+            list.add(componentToText(
+                new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
+                    .append("|   ").color(ChatColor.YELLOW.asBungee())
+                    .append(Arrays.toString(segments).replaceAll("[\\[\\]]", ""))
+                    .append(" ".repeat((lineLength - width) / 4))
+                    .append(".".repeat((lineLength - width) % 4)).color(ChatColor.DARK_GRAY.asBungee())
+                    .append("|").color(ChatColor.YELLOW.asBungee())
+                    .create()));
+            formattedMessage(new TextComponent(Arrays.toString(
+                Arrays.copyOfRange(
+                    split, split.length - segments.length + 1, split.length))
+                .replaceAll("[\\[\\],]", "")), list);
         } else {
-            player.sendMessage(".|   " + line + " ".repeat((lineLength - width) / 4) + ".".repeat((lineLength - width) % 4) + "|");
+            list.add(componentToText(
+                new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
+                    .append("|   ").color(ChatColor.YELLOW.asBungee())
+                    .append(line)
+                    .append(" ".repeat((lineLength - width) / 4))
+                    .append(".".repeat((lineLength - width) % 4)).color(ChatColor.DARK_GRAY.asBungee())
+                    .append("|").color(ChatColor.YELLOW.asBungee())
+                    .create()));
         }
     }
 
-    private static TextComponent tec(String string) {
-        return new TextComponent(string);
+    private static TextComponent componentToText(BaseComponent[] components) {
+        TextComponent textComponent = new TextComponent();
+        for (BaseComponent component : components) {
+            textComponent.addExtra(component);
+        }
+        return textComponent;
     }
 }
