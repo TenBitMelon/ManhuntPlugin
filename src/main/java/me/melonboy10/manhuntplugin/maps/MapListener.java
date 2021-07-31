@@ -1,6 +1,6 @@
 package me.melonboy10.manhuntplugin.maps;
 
-import me.melonboy10.manhuntplugin.ManhuntGame;
+import me.melonboy10.manhuntplugin.ManhuntGameOld;
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -31,14 +31,14 @@ public class MapListener implements Listener {
     }
 
     private boolean checkItem(ItemStack itemStack, Player player) {
-        if (!ManhuntGame.inGame) {
+        if (!ManhuntGameOld.inGame) {
             if (itemStack != null && player != null) {
                 if (itemStack.getType().equals(Material.FILLED_MAP)) {
                     ItemMeta meta = itemStack.getItemMeta();
                     if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "viewing-map"), PersistentDataType.INTEGER)) {
                         player.getInventory().remove(Material.FILLED_MAP);
                         playersWithItem.remove(player);
-                        ManhuntGame.creationMenu.open(player);
+                        ManhuntGameOld.creationMenu.open(player);
                         return true;
                     }
                 }
@@ -66,7 +66,7 @@ public class MapListener implements Listener {
         if (playersWithItem.contains(event.getPlayer())) {
             event.getPlayer().getInventory().remove(Material.FILLED_MAP);
             playersWithItem.remove(event.getPlayer());
-            ManhuntGame.creationMenu.open(event.getPlayer());
+            ManhuntGameOld.creationMenu.open(event.getPlayer());
         }
     }
 

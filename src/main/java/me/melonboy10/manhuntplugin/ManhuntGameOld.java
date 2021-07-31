@@ -6,7 +6,6 @@ import net.md_5.bungee.api.chat.*;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MinecraftFont;
 
@@ -15,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public final class ManhuntGame {
+public final class ManhuntGameOld {
 
     private static ManhuntPlugin plugin = ManhuntPlugin.plugin;
 
@@ -35,8 +34,8 @@ public final class ManhuntGame {
     public static ArrayList<Player> hunters = new ArrayList<>();
     public static ArrayList<Player> spectators = new ArrayList<>();
 
-    public ManhuntGame(ManhuntPlugin plugin) {
-        ManhuntGame.plugin = plugin;
+    public ManhuntGameOld(ManhuntPlugin plugin) {
+        ManhuntGameOld.plugin = plugin;
     }
 
     public static void createGame(CommandSender sender) {
@@ -51,20 +50,25 @@ public final class ManhuntGame {
             }
             return;
         }
+        if (worldGenerating) {
+            if (sender instanceof Player) {
+                teamsMenu.open(((Player) sender));
+            }
+        }
 
         worldType = WorldType.NORMAL;
         difficulty = Difficulty.NORMAL;
         seed = new Random().nextLong();
 
         inCreation = true;
-        creationMenu = new CreateGameMenu(plugin);
+        creationMenu = new CreateGameMenu(plugin, "");
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             creationMenu.open(onlinePlayer);
         }
     }
 
     public static void startWorldGen() {
-
+        spectators.clear();
         spectators.addAll(Bukkit.getOnlinePlayers());
 
 //                ManhuntGame.world = new WorldCreator(String.valueOf(new Random().nextInt()))
@@ -76,16 +80,12 @@ public final class ManhuntGame {
 //                    viewer.openInventory(ManhuntGame.teamsMenu.getInventory());
 //                }
 
+        inCreation = false;
+        worldGenerating = true;
         sendTeamsMessage();
     }
 
     public static void sendTeamsMessage() {
-
-//                    TextComponent part1 = new TextComponent(ChatColor.GREEN + "A Manhunt world is being created. Join a team by typing");
-//                    TextComponent command = new TextComponent(ChatColor.GREEN + " /teams ");
-//                    TextComponent part2 = new TextComponent(ChatColor.GREEN + "or by clicking");
-//                    TextComponent menuLink = new TextComponent(ChatColor.GREEN + " here");
-
                 /*
                  +-----------------------------------------+
                 .|                                                 |
@@ -101,29 +101,6 @@ public final class ManhuntGame {
                 +-----------------------------------------+
                  */
 
-                /*TextComponent part1 = tec(ChatColor.YELLOW + "+-----------------------------------------+");
-                TextComponent part2 = tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|                                                 |");
-                TextComponent part3 = tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "Online Players:" + ChatColor.DARK_GRAY +
-                        "                               " + ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|");
-                TextComponent part4 = tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "melonboy10, Enderlord0042, Pick3lbo1,        |");
-                TextComponent part5 = tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "Minecraft_Atom, Derftcahuji                  .|");
-                TextComponent part6 = tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "|");
-                TextComponent part7 = tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "A World is Being Generated!                  .|");
-                TextComponent part8 = tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "Join a team below or by clicking here!       .|");
-                TextComponent part9 = tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "|");
-                TextComponent part10 = tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "Runners - 1  Hunters - 1  Spectators - 3  |");
-                TextComponent part11 = tec(ChatColor.DARK_GRAY + "." + ChatColor.YELLOW + "|   " +
-                        "|");
-                TextComponent part12 = tec("+-----------------------------------------+");*/
-
         ArrayList<String> players = new ArrayList<>(){{
             for (Player player : Bukkit.getOnlinePlayers()) {
                 if (runners.contains(player)) {
@@ -135,38 +112,6 @@ public final class ManhuntGame {
                 }
             }
         }};
-
-
-        /* 257 Width for top row 52
-         * | - 1    . - 1    ! - 1    : - 1
-         * + - 5    - - 5   " "- 3
-         */
-
-        /*StringBuilder previousPlayerStack = new StringBuilder(".|   " + players.get(0));
-        players.remove(0);
-        for (String player : players) {
-            if (MinecraftFont.Font.getWidth(previousPlayerStack + player) < 257) {
-                previousPlayerStack.append(player);
-                players.remove(player);
-            }
-        }
-        int widthLeft = 257 - MinecraftFont.Font.getWidth(previousPlayerStack.toString());
-        previousPlayerStack.append(" ".repeat(widthLeft / 4))
-                .append(".".repeat(widthLeft % 4))
-                .append("|");
-
-        TextComponent part1  = tec("+-----------------------------------------+");
-        TextComponent part2  = tec(".|" + " ".repeat(62) + ".|");
-        TextComponent part3  = tec(".|   " + "Online Players" + ":" + " ".repeat(41) + "|");
-        TextComponent part4  = tec(previousPlayerStack.toString());
-        TextComponent part5  = tec(".|   Minecraft_Atom, Derftcahuji                  .|");
-        TextComponent part6  = tec(".|                                                 |");
-        TextComponent part7  = tec(".|   A World is Being Generated!                  .|");
-        TextComponent part8  = tec(".|   Join a team below or by clicking here!       .|");
-        TextComponent part9  = tec(".|                                                 |");
-        TextComponent part10 = tec(".|   Runners - 1  Hunters - 1  Spectators - 3  |");
-        TextComponent part11 = tec(".|                                                 |");
-        TextComponent part12 = tec("+-----------------------------------------+");*/
 
         ArrayList<TextComponent> preset = new ArrayList<>(){{
             add(componentToText(new ComponentBuilder("").create()));
@@ -220,19 +165,6 @@ public final class ManhuntGame {
         for (TextComponent line : preset) {
             formattedMessage(line, output);
         }
-
-//            onlinePlayer.spigot().sendMessage(part1);
-//            onlinePlayer.spigot().sendMessage(part2);
-//            onlinePlayer.spigot().sendMessage(part3);
-//            onlinePlayer.spigot().sendMessage(part4);
-//            onlinePlayer.spigot().sendMessage(part5);
-//            onlinePlayer.spigot().sendMessage(part6);
-//            onlinePlayer.spigot().sendMessage(part7);
-//            onlinePlayer.spigot().sendMessage(part8);
-//            onlinePlayer.spigot().sendMessage(part9);
-//            onlinePlayer.spigot().sendMessage(part10);
-//            onlinePlayer.spigot().sendMessage(part11);
-//            onlinePlayer.spigot().sendMessage(part12);
 
         for (TextComponent line : output) {
             for (Player player : Bukkit.getOnlinePlayers()) {
