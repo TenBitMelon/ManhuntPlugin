@@ -7,9 +7,9 @@ import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 
-public class JoinTeamMenu extends Menu {
+public class TeamSelectMenu extends Menu {
 
-    public JoinTeamMenu(ManhuntPlugin plugin) {
+    public TeamSelectMenu(ManhuntPlugin plugin) {
         super(plugin);
     }
 
