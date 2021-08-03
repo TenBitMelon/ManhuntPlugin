@@ -19,13 +19,11 @@ import java.util.Arrays;
 
 public abstract class Menu implements InventoryHolder {
 
-    protected ManhuntPlugin plugin;
+    protected ManhuntPlugin plugin = ManhuntPlugin.plugin;
     protected Inventory inventory;
     protected ItemStack fillerGlass = makeItem(Material.GRAY_STAINED_GLASS_PANE, " ");
 
-    public Menu(ManhuntPlugin plugin) {
-        this.plugin = plugin;
-    }
+    public Menu() {}
 
     public abstract String getMenuName();
 

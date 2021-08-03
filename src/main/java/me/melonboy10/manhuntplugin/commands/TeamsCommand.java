@@ -9,7 +9,8 @@ import org.bukkit.entity.Player;
 public class TeamsCommand{
 
      /*
-     * Make the ManhuntGame into an instanceable object
+     * This is for the clicking in the text menu
+     * This is also for displaying the teams menu why in a game
      */
 
     @Command(name = "", aliases = {"join"}, desc = "Open the teams menu")
