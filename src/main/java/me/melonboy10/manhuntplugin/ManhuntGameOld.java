@@ -61,7 +61,7 @@ public final class ManhuntGameOld {
         seed = new Random().nextLong();
 
         inCreation = true;
-        creationMenu = new CreateGameMenu(plugin, "");
+        creationMenu = new CreateGameMenu("");
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             creationMenu.open(onlinePlayer);
         }

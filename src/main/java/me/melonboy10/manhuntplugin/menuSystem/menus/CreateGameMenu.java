@@ -1,7 +1,8 @@
 package me.melonboy10.manhuntplugin.menuSystem.menus;
 
-import me.melonboy10.manhuntplugin.ManhuntGameOld;
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
+import me.melonboy10.manhuntplugin.commands.CreateGameCommand;
+import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
 import me.melonboy10.manhuntplugin.game.ManhuntGameSettings;
 import me.melonboy10.manhuntplugin.maps.ImageMapRenderer;
 import me.melonboy10.manhuntplugin.maps.MapListener;
@@ -12,6 +13,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.inventory.AnvilInventory;
+import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.MapMeta;
@@ -25,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -37,10 +41,10 @@ public class CreateGameMenu extends Menu {
     // double click to make world
     private BufferedImage mapImage;
     private final ManhuntGameSettings settings;
+    private LinkedList<Player> invitedPlayers = new LinkedList<>();
     private boolean worldChange = false;
 
-    public CreateGameMenu(ManhuntPlugin plugin, String seed) {
-        super(plugin);
+    public CreateGameMenu(String seed) {
         if (seed.isBlank())
             settings = new ManhuntGameSettings();
         else
@@ -63,12 +67,12 @@ public class CreateGameMenu extends Menu {
         switch (event.getSlot()) {
 //            Difficulty
             case 10 -> {
-                ManhuntGameOld.difficulty = getNextDifficulty(ManhuntGameOld.difficulty);
+                settings.setDifficulty(getNextDifficulty(settings.getDifficulty()));
                 setMenuItems();
             }
 //            World Type
             case 11 -> {
-                ManhuntGameOld.worldType = getNextWorldType(ManhuntGameOld.worldType);
+                settings.setWorldType(getNextWorldType(settings.getWorldType()));
                 worldChange = true;
                 setMenuItems();
             }
@@ -76,24 +80,31 @@ public class CreateGameMenu extends Menu {
             case 12 -> {
                 switch (event.getClick()) {
                     case LEFT, SHIFT_LEFT, MIDDLE, DROP, CONTROL_DROP, CREATIVE, SWAP_OFFHAND -> {
-                        player.closeInventory();
                         AnvilGUI.Builder builder = new AnvilGUI.Builder();
-                        builder.itemLeft(new ItemStack(Material.PAPER))
+                        builder
+                                .itemLeft(makeItem(Material.PAPER, "", "", ChatColor.RED + "Click to return!"))
                                 .text("Enter Seed")
                                 .title("Enter the world seed!")
                                 .plugin(plugin)
+                                .onClose((player1 -> {
+                                    player1.openInventory(this.inventory);
+                                }))
+                                .onLeftInputClick((player1 -> {
+                                    player1.openInventory(this.inventory);
+                                }))
                                 .onComplete((player1, text) -> {
                                     try {
-                                        ManhuntGameOld.seed = Long.parseLong(text);
+                                        settings.setSeed(Long.parseLong(text));
                                     } catch (Exception e) {
-                                        ManhuntGameOld.seed = text.hashCode();
+                                        settings.setSeed(text.hashCode());
                                     }
-                                    return AnvilGUI.Response.openInventory(ManhuntGameOld.creationMenu.getInventory());
+//                                    this.setMenuItems();
+                                    return AnvilGUI.Response.openInventory(this.inventory);
                                 })
                                 .open(player);
                     }
                     case RIGHT, SHIFT_RIGHT -> {
-                        ManhuntGameOld.seed = new Random().nextLong();
+                        settings.setSeed(new Random().nextLong());
                     }
                 }
                 worldChange = true;
@@ -113,7 +124,7 @@ public class CreateGameMenu extends Menu {
                 view.setUnlimitedTracking(false);
                 view.setLocked(true);
                 view.getRenderers().clear();
-                view.addRenderer(new ImageMapRenderer(mapImage, plugin));
+                view.addRenderer(new ImageMapRenderer(mapImage));
                 mapMeta.setMapView(view);
 
                 map.setItemMeta(mapMeta);
@@ -140,12 +151,39 @@ public class CreateGameMenu extends Menu {
             }
 //            Invites
             case 16 -> {
-
+                AnvilGUI.Builder builder = new AnvilGUI.Builder();
+                builder
+                        .itemLeft(makeItem(Material.NAME_TAG, "", "", ChatColor.RED + "Click to close!"))
+                        .text("Enter Player Name")
+                        .title("Enter a player!")
+                        .plugin(plugin)
+                        .onClose((player1 -> {
+                            player1.openInventory(this.inventory);
+                        }))
+                        .onLeftInputClick((player1 -> {
+                            player1.openInventory(this.inventory);
+                        }))
+                        .onComplete((player1, text) -> {
+                            Player player2 = Bukkit.getPlayerExact(text);
+                            if (player2 != null && player2.isOnline()) {
+                                if (player2 != player1) {
+                                    invitedPlayers.add(player2);
+                                    this.setMenuItems();
+                                    return AnvilGUI.Response.openInventory(this.inventory);
+                                } else {
+                                    return AnvilGUI.Response.text("You cannot invite yourself!");
+                                }
+                            } else {
+                                return AnvilGUI.Response.text("That player doesn't exist or is offline!");
+                            }
+                        })
+                        .open(player);
             }
 //            Create button
             case 22 -> {
                 if (event.getClick().equals(ClickType.DOUBLE_CLICK)) {
-                    System.out.println("Create Game");
+                    CreateGameCommand.playerMenuMap.put(player, null);
+                    ManhuntGameManager.create(settings, new ArrayList<>(invitedPlayers), player);
                 }
             }
         }
@@ -159,7 +197,7 @@ public class CreateGameMenu extends Menu {
     @Override
     public void setMenuItems() {
 
-        inventory.setItem(10, makeItem(switch (ManhuntGameOld.difficulty) {
+        inventory.setItem(10, makeItem(switch (settings.getDifficulty()) {
                     case EASY -> Material.GOLDEN_SWORD;
                     case NORMAL -> Material.IRON_SWORD;
                     case HARD -> Material.DIAMOND_SWORD;
@@ -169,10 +207,10 @@ public class CreateGameMenu extends Menu {
                 ChatColor.DARK_GRAY + "Gameplay",
                 "",
                 ChatColor.AQUA + "Selected Difficulty:",
-                ChatColor.GRAY + " - " + (ManhuntGameOld.difficulty == Difficulty.EASY ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Easy",
-                ChatColor.GRAY + " - " + (ManhuntGameOld.difficulty == Difficulty.NORMAL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Normal",
-                ChatColor.GRAY + " - " + (ManhuntGameOld.difficulty == Difficulty.HARD ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Hard",
-                ChatColor.GRAY + " - " + (ManhuntGameOld.difficulty == Difficulty.PEACEFUL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Peaceful",
+                ChatColor.GRAY + " - " + (settings.getDifficulty() == Difficulty.EASY ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Easy",
+                ChatColor.GRAY + " - " + (settings.getDifficulty() == Difficulty.NORMAL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Normal",
+                ChatColor.GRAY + " - " + (settings.getDifficulty() == Difficulty.HARD ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Hard",
+                ChatColor.GRAY + " - " + (settings.getDifficulty() == Difficulty.PEACEFUL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Peaceful",
                 "",
                 ChatColor.YELLOW + "Click to toggle!"
             ));
@@ -186,9 +224,9 @@ public class CreateGameMenu extends Menu {
                 ChatColor.DARK_GRAY + "Generation",
                 "",
                 ChatColor.AQUA + "Selected World Type:",
-                ChatColor.GRAY + " - " + (ManhuntGameOld.worldType == WorldType.NORMAL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Default",
-                ChatColor.GRAY + " - " + (ManhuntGameOld.worldType == WorldType.LARGE_BIOMES ?  ChatColor.DARK_AQUA : ChatColor.GRAY) + "Large Biomes",
-                ChatColor.GRAY + " - " + (ManhuntGameOld.worldType == WorldType.AMPLIFIED ?  ChatColor.DARK_AQUA : ChatColor.GRAY) + "Amplified",
+                ChatColor.GRAY + " - " + (settings.getWorldType() == WorldType.NORMAL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Default",
+                ChatColor.GRAY + " - " + (settings.getWorldType() == WorldType.LARGE_BIOMES ?  ChatColor.DARK_AQUA : ChatColor.GRAY) + "Large Biomes",
+                ChatColor.GRAY + " - " + (settings.getWorldType() == WorldType.AMPLIFIED ?  ChatColor.DARK_AQUA : ChatColor.GRAY) + "Amplified",
                 "",
                 ChatColor.YELLOW + "Click to toggle!"
         ));
@@ -198,13 +236,13 @@ public class CreateGameMenu extends Menu {
                 ChatColor.DARK_GRAY + "Generation",
                 "",
                 ChatColor.AQUA + "Set Seed:",
-                ChatColor.GRAY + "" + ManhuntGameOld.seed,
+                ChatColor.GRAY + "" + settings.getSeed(),
                 "",
                 ChatColor.YELLOW + "Click to change!",
                 ChatColor.YELLOW + "Right-Click to randomize!"
             ));
 
-        if (settings.getSeed() != ManhuntGameOld.seed || settings.getWorldType() != ManhuntGameOld.worldType) {
+        if (worldChange) {
             inventory.setItem(13, createMapItem());
         }
 
@@ -235,11 +273,30 @@ public class CreateGameMenu extends Menu {
                 ChatColor.YELLOW + "Right-Click to decrease!"
             ));
 
-        inventory.setItem(16, makeItem(Material.NAME_TAG,
-                ChatColor.YELLOW + "Invite Players"
-            ));
+        ItemStack inviteItem = makeItem(Material.NAME_TAG,
+                ChatColor.YELLOW + "Invite Players",
+                ChatColor.DARK_GRAY + "Gameplay",
+                "",
+                ChatColor.AQUA + "Invited Players:"
+        );
+        ItemMeta inviteItemMeta = inviteItem.getItemMeta();
+        List<String> lore = inviteItemMeta.getLore();
+        if (invitedPlayers.size() > 0) {
+            lore.addAll(invitedPlayers.stream().map(p -> ChatColor.GRAY + " - " + p.getName()).toList());
+        } else {
+            lore.add(ChatColor.GRAY + "No-one has been invited!");
+        }
+        lore.add("");
+        lore.add(ChatColor.YELLOW + "Click to add players!");
+        lore.add(ChatColor.YELLOW + "Right-Click to remove last player!");
+        inviteItemMeta.setLore(lore);
+        inviteItem.setItemMeta(inviteItemMeta);
 
-        inventory.setItem(22, makeItem(Material.LIME_TERRACOTTA, ChatColor.GREEN + "Create World"));
+        inventory.setItem(16, inviteItem);
+
+        inventory.setItem(22, makeItem(Material.LIME_TERRACOTTA,
+                ChatColor.GREEN + "Create World",
+                ChatColor.YELLOW + "Double-Click to create!"));
 
         setFillerGlass();
     }
@@ -295,8 +352,8 @@ public class CreateGameMenu extends Menu {
 
         try {
             new ProcessBuilder(finder.getAbsolutePath(),
-                        String.valueOf(ManhuntGameOld.seed),
-                        ManhuntGameOld.worldType.equals(WorldType.LARGE_BIOMES) ? "--largeBiomes" : ""
+                        String.valueOf(settings.getSeed()),
+                        settings.getWorldType().equals(WorldType.LARGE_BIOMES) ? "--largeBiomes" : ""
                     )
                     .redirectOutput(rgbValues)
                     .start()

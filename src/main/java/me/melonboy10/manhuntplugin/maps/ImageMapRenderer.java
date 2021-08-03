@@ -13,12 +13,11 @@ import java.util.Map;
 public class ImageMapRenderer extends MapRenderer {
 
     BufferedImage image;
-    ManhuntPlugin plugin;
+    ManhuntPlugin plugin = ManhuntPlugin.plugin;
     boolean text = false;
 
-    public ImageMapRenderer(BufferedImage image, ManhuntPlugin plugin) {
+    public ImageMapRenderer(BufferedImage image) {
         this.image = image;
-        this.plugin = plugin;
     }
 
     @Override

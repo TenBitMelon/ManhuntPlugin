@@ -19,12 +19,10 @@ import java.util.ArrayList;
 
 public class MapListener implements Listener {
 
-    private ManhuntPlugin plugin;
+    private ManhuntPlugin plugin = ManhuntPlugin.plugin;
     private static ArrayList<Player> playersWithItem = new ArrayList<>();
 
-    public MapListener(ManhuntPlugin plugin) {
-        this.plugin = plugin;
-    }
+    public MapListener() {}
 
     public static void addPlayer(Player player) {
         playersWithItem.add(player);

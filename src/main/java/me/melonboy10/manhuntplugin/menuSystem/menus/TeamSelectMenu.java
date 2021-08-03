@@ -9,9 +9,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 
 public class TeamSelectMenu extends Menu {
 
-    public TeamSelectMenu(ManhuntPlugin plugin) {
-        super(plugin);
-    }
+    public TeamSelectMenu() {}
 
     @Override
     public String getMenuName() {

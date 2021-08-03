@@ -109,10 +109,10 @@
             <artifactId>drink</artifactId>
             <version>master</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.github.Minikloon</groupId>-->
-<!--            <artifactId>FSMgasm</artifactId>-->
-<!--            <version>-SNAPSHOT</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.github.Minikloon</groupId>
+            <artifactId>FSMgasm</artifactId>
+            <version>master</version>
+        </dependency>
     </dependencies>
 </project>
