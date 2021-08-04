@@ -41,8 +41,8 @@ public class CreateGameMenu extends Menu {
     // double click to make world
     private BufferedImage mapImage;
     private final ManhuntGameSettings settings;
-    private LinkedList<Player> invitedPlayers = new LinkedList<>();
-    private boolean worldChange = false;
+    private final LinkedList<Player> invitedPlayers = new LinkedList<>();
+    private boolean worldChange = true;
 
     public CreateGameMenu(String seed) {
         if (seed.isBlank())
