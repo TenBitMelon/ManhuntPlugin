@@ -1,6 +1,5 @@
 package me.melonboy10.manhuntplugin.menuSystem.menus;
 
-import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.menuSystem.Menu;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
