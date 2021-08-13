@@ -3,12 +3,10 @@ package me.melonboy10.manhuntplugin.maps;
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapCanvas;
-import org.bukkit.map.MapCursor;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 
 import java.awt.image.BufferedImage;
-import java.util.Map;
 
 public class ImageMapRenderer extends MapRenderer {
 

@@ -1,27 +1,19 @@
 package me.melonboy10.manhuntplugin.game;
 
-import me.melonboy10.manhuntplugin.ManhuntPlugin;
-import org.bukkit.Bukkit;
+import me.melonboy10.manhuntplugin.menuSystem.menus.CreateGameMenu;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static me.melonboy10.manhuntplugin.game.ManhuntGame.Team.*;
-
 public class ManhuntGameManager {
 
     private static final List<ManhuntGame> games = new ArrayList<>();
     private static final HashMap<Player, ManhuntGame> playerToGame = new HashMap<>();
 
-    public static ManhuntGame create(ManhuntGameSettings settings, ArrayList<Player> invitedPlayers, Player creator) {
-        ManhuntGame game = new ManhuntGame(settings);
-        invitedPlayers.forEach(game::invitePlayer);
-        game.playerJoin(creator, SPECTATOR);
-
+    public static void add(ManhuntGame game) {
         games.add(game);
-        return game;
     }
 
     public static List<ManhuntGame> getGames() {
@@ -32,11 +24,19 @@ public class ManhuntGameManager {
         return playerToGame.get(player);
     }
 
+    public static ManhuntGame getGame(int hashCode) {
+        return games.stream().takeWhile(manhuntGame -> manhuntGame.hashCode() == hashCode).findFirst().orElse(null);
+    }
+
     public static boolean isPlayerInGame(Player player) {
         return playerToGame.containsKey(player);
     }
 
     public static HashMap<Player, ManhuntGame> getPlayerToGame() {
         return playerToGame;
+    }
+
+    public static boolean isPlayerInGame(Player player, ManhuntGame manhuntGame) {
+        return !playerToGame.get(player).equals(manhuntGame);
     }
 }

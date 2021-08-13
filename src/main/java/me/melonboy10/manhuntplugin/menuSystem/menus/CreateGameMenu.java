@@ -1,7 +1,7 @@
 package me.melonboy10.manhuntplugin.menuSystem.menus;
 
-import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.commands.CreateGameCommand;
+import me.melonboy10.manhuntplugin.game.ManhuntGame;
 import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
 import me.melonboy10.manhuntplugin.game.ManhuntGameSettings;
 import me.melonboy10.manhuntplugin.maps.ImageMapRenderer;
@@ -13,8 +13,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.inventory.AnvilInventory;
-import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.MapMeta;
@@ -183,7 +181,9 @@ public class CreateGameMenu extends Menu {
             case 22 -> {
                 if (event.getClick().equals(ClickType.DOUBLE_CLICK)) {
                     CreateGameCommand.playerMenuMap.put(player, null);
-                    ManhuntGameManager.create(settings, new ArrayList<>(invitedPlayers), player);
+
+                    ManhuntGame game = new ManhuntGame(settings, player, invitedPlayers, inventory.getItem(13));
+                    ManhuntGameManager.add(game);
                 }
             }
         }

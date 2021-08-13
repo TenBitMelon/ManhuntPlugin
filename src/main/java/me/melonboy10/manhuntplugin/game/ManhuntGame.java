@@ -1,23 +1,27 @@
 package me.melonboy10.manhuntplugin.game;
 
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Multimap;
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.menuSystem.menus.TeamSelectMenu;
+import me.melonboy10.manhuntplugin.menuSystem.menus.TeamSelectTextMenu;
 import me.melonboy10.manhuntplugin.utils.MessageUtils;
-import net.md_5.bungee.api.chat.*;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.map.MinecraftFont;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 public class ManhuntGame {
 
@@ -27,22 +31,31 @@ public class ManhuntGame {
     public enum GameState {GENERATING, HUNTER_COOLDOWN, PLAYING, GAME_OVER;}
 
     private GameState gameState = GameState.GENERATING;
-    private ManhuntGameSettings settings;
+    private final ManhuntGameSettings settings;
     private World world;
-
     private int hunterCooldown;
 
     private TeamSelectTextMenu teamTextMenu;
     private TeamSelectMenu teamMenu;
+    private ItemStack mapItem;
     private final ArrayList<Player> invitedPlayers = new ArrayList<>();
     private final HashBiMap<Player, Team> players = HashBiMap.create();
 
     private final HashMap<Player, PlayerInventory> quitPlayerInventory = new HashMap<>();
     private final HashMap<Player, Location> quitPlayerLocation = new HashMap<>();
+    private final HashMap<Player, Team> quitPlayerTeam = new HashMap<>();
+    private final HashMap<Player, BukkitTask> quitPlayerTimer = new HashMap<>();
 
-    public ManhuntGame(ManhuntGameSettings settings) {
+    public ManhuntGame(ManhuntGameSettings settings, Player creator, LinkedList<Player> invitedPlayers, ItemStack item) {
         this.settings = settings;
         hunterCooldown = settings.getHunterCooldown();
+        teamTextMenu = new TeamSelectTextMenu(this, item);
+        mapItem = item;
+
+        forceInvitePlayer(creator);
+        playerAcceptInvite(creator);
+        invitedPlayers.forEach(this::invitePlayer);
+
 
         //generate world
     }
@@ -51,14 +64,32 @@ public class ManhuntGame {
         return players.getOrDefault(player, null);
     }
 
+    public ArrayList<Player> getInvitedPlayers() {
+        return invitedPlayers;
+    }
+
+    public void forceInvitePlayer(Player creator) {
+        invitedPlayers.add(creator);
+    }
+
+    /**
+     * Used to invite a player and show invitee text
+     * Checks if in a game and gives warning
+     *
+     * @param player Player being invited
+     */
     public void invitePlayer(Player player) {
         invitedPlayers.add(player);
-        player.sendMessage(ChatColor.YELLOW + "+-----------------------------------------+");
-        player.spigot().sendMessage(formatMessage(new TextComponent(ChatColor.GREEN + "You have been invited to a new Manhunt"), 235));
+        teamTextMenu.update();
+        MessageUtils.sendLineBreak(player);
+        MessageUtils.sendBlankLine(player);
+        MessageUtils.sendFormattedMessage(player, new TextComponent(ChatColor.GREEN + "You have been invited to a new Manhunt"));
+        MessageUtils.sendFormattedMessage(player, new TextComponent(ChatColor.GREEN + "You have been invited to a new Manhunt"));
+        MessageUtils.sendBlankLine(player);
         if (ManhuntGameManager.isPlayerInGame(player)) {
-            player.spigot().sendMessage(formatMessage(new TextComponent(ChatColor.RED + "You are already in a game so to join you"), 235));
-            player.spigot().sendMessage(formatMessage(componentToText(
-                new ComponentBuilder(ChatColor.RED + "need to leave your game by typing ")
+            MessageUtils.sendFormattedMessage(player, new TextComponent(ChatColor.RED + "You are already in a game so to join you"));
+            MessageUtils.sendFormattedMessage(player,
+                    new ComponentBuilder(ChatColor.RED + "need to leave your game by typing ")
                     .append("/leave")
                     .color(ChatColor.GOLD.asBungee())
                     .event(new HoverEvent(
@@ -69,156 +100,125 @@ public class ManhuntGame {
                     ))
                     .append(".")
                     .color(ChatColor.RED.asBungee())
-                    .create()), 235)
+                    .create()
             );
+            MessageUtils.sendBlankLine(player);
         }
-        player.spigot().sendMessage(formatMessage(new TextComponent(ChatColor.YELLOW + "You can join by typing or clicking /join " + this.hashCode()), 235));
+        MessageUtils.sendFormattedMessage(player, new TextComponent(ChatColor.YELLOW + "You can join by typing or clicking /join " + this.hashCode()));
         player.sendMessage(ChatColor.YELLOW + "+-----------------------------------------+");
     }
 
-    public void playerJoin(Player player, Team team) {
-        if (!ManhuntGameManager.isPlayerInGame(player)) {
-            if (quitPlayerInventory.containsKey(player) && quitPlayerLocation.containsKey(player)) {
-                player.teleport(quitPlayerLocation.get(player));
-                player.getInventory().setContents(quitPlayerInventory.get(player).getContents());
-            } else {
-                switch (settings.getPrivacy()) {
-                    case PUBLIC -> {
-                        switch (gameState) {
-                            case GENERATING: {
-                                if (invitedPlayers.contains(player)) {
-                                    teamTextMenu.addPlayer(player);
-                                } else {
-                                    invitePlayer(player);
-                                }
-                            }
-                            case HUNTER_COOLDOWN: {
-                                switch (team) {
-                                    case RUNNER -> {
-                                        player.setGameMode(GameMode.SURVIVAL);
-                                    }
-                                    case HUNTER -> {
-                                        player.setGameMode(GameMode.SURVIVAL);
-                                        player.addPotionEffects(new ArrayList<>() {{
-                                            add(new PotionEffect(PotionEffectType.SLOW_DIGGING, hunterCooldown, 255, false, false, false));
-                                            add(new PotionEffect(PotionEffectType.BLINDNESS, hunterCooldown, 255, false, false, false));
-                                        }});
-                                    }
-                                    case SPECTATOR -> {
-                                        player.setGameMode(GameMode.SPECTATOR);
-                                    }
-                                }
-                                players.put(player, team);
-                                player.teleport(world.getSpawnLocation());
-                                player.getInventory().clear();
-                            }
-                            case PLAYING: {
-                                if (team == Team.SPECTATOR) {
-                                    player.setGameMode(GameMode.SPECTATOR);
-                                }
-                                players.put(player, team);
-                                player.teleport(world.getSpawnLocation());
-                                player.getInventory().clear();
-                            }
-                            case GAME_OVER: {
-                                MessageUtils.sendError(player, "This game is over!");
-                            }
-                        }
-                    }
-                    case SPECTATOR_ONLY -> {
-                        if (!gameState.equals(GameState.GAME_OVER)) {
-                            player.teleport(world.getSpawnLocation());
-                            players.put(player, Team.SPECTATOR);
-                            player.getInventory().clear();
-                            player.setGameMode(GameMode.SPECTATOR);
-                        } else {
-                            MessageUtils.sendError(player, "This game is over!");
-                        }
-                    }
-                    case PRIVATE -> {
-                        MessageUtils.sendError(player, "This game is private!");
-                    }
-                }
-            }
-        } else {
-            player.sendMessage(ChatColor.RED + "You are currently in another game!");
+    /**
+     * Called when a player accepts the invite
+     * Player cannot join if not invited
+     *
+     * @param player Player joining
+     */
+    public void playerAcceptInvite(Player player) {
+        if (!invitedPlayers.contains(player)) {
+            MessageUtils.sendError(player, "You have not been invited!");
+            return;
         }
+        if (ManhuntGameManager.isPlayerInGame(player)) {
+            MessageUtils.sendError(player, "You are already in a game!");
+            return;
+        }
+        if (gameState.equals(GameState.GAME_OVER)) {
+            MessageUtils.sendError(player, "This game is over!");
+            return;
+        }
+        if (gameState.equals(GameState.GENERATING)) {
+            teamTextMenu.playerAcceptInvite(player);
+        } else if (settings.getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)) {
+            players.put(player, Team.SPECTATOR);
+            teleportIntoGame(player);
+        } else {
+            if (quitPlayerTimer.containsKey(player)) {
+                teleportIntoGame(player);
+            } else {
+                teamMenu.open(player);
+            }
+        }
+    }
+
+    /**
+     * Set Team called when /team in called
+     * check if in game
+     * check if already on that team
+     *
+     * need to make independant from menu
+     * menu can have selector and set when menu is done
+     * but this can be run when someone new joins
+     */
+    public void setTeams(HashBiMap<Player, ManhuntGame.Team> setPlayers) {
+        setPlayers.forEach((player, team) -> {
+            if (!ManhuntGameManager.isPlayerInGame(player, this) &&  invitedPlayers.contains(player)) {
+
+            }
+        });
+    }
+
+    /**
+     * Called when teleporting a player into a game
+     *
+     * @param player Player being teleported
+     */
+    private void teleportIntoGame(Player player) {
+        if (!isWorldReady()) {
+            return;
+        }
+        if (players.containsKey(player) || quitPlayerTimer.containsKey(player)) {
+            player.teleport(world.getSpawnLocation());
+            if (gameState.equals(GameState.HUNTER_COOLDOWN) && getTeam(player).equals(Team.HUNTER)) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, hunterCooldown, 255, false, false));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, hunterCooldown, 255, false, false));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, hunterCooldown, 255, false, false));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, hunterCooldown, 255, false, false));
+            }
+            if (quitPlayerTimer.containsKey(player)) {
+                players.put(player, quitPlayerTeam.get(player));
+                player.getInventory().setContents(quitPlayerInventory.get(player).getContents());
+                player.teleport(quitPlayerLocation.get(player));
+                quitPlayerTimer.get(player).cancel();
+
+                quitPlayerTimer.remove(player);
+                quitPlayerTeam.remove(player);
+                quitPlayerLocation.remove(player);
+                quitPlayerInventory.remove(player);
+            }
+        }
+    }
+
+    public boolean isWorldReady() {
+        return Bukkit.getWorld(world.getUID()) != null;
     }
 
     public void playerLeave(Player player) {
         Team team = getTeam(player);
-        if (team.equals(Team.RUNNER) || team.equals(Team.HUNTER)) {
+        if (team.equals(Team.RUNNER) || team.equals(Team.HUNTER) && (!gameState.equals(GameState.GENERATING) && !gameState.equals(GameState.GAME_OVER))) {
             quitPlayerInventory.put(player, player.getInventory());
             quitPlayerLocation.put(player, player.getLocation());
+            quitPlayerTeam.put(player, getTeam(player));
+
+            quitPlayerTimer.put(player, new BukkitRunnable() {
+                @Override
+                public void run() {
+                    quitPlayerTimer.remove(player);
+                    quitPlayerInventory.remove(player);
+                    quitPlayerLocation.remove(player);
+                    quitPlayerTeam.remove(player);
+                }
+            }.runTaskLater(plugin, 5 * 60 * 20));
+
+            players.remove(player);
+            players.forEach((player1, team1) -> player1.sendMessage(ChatColor.RED + player1.getName() + " has left the game! They have 5 minutes to rejoin!"));
         }
         player.getInventory().clear();
         player.teleport(ManhuntPlugin.hubWorld.getSpawnLocation());
     }
 
-    private TextComponent formatMessage(TextComponent line, int length) {
-        int width = MinecraftFont.Font.getWidth(ChatColor.stripColor(line.toPlainText()));
-        if (width > length) {
-            return componentToText(
-                    new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
-                            .append("|   ").color(ChatColor.YELLOW.asBungee())
-                            .append(line)
-                            .append("|").color(ChatColor.YELLOW.asBungee())
-                            .create());
-        } else {
-            return componentToText(
-                    new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
-                            .append("|   ").color(ChatColor.YELLOW.asBungee())
-                            .append(line)
-                            .append(" ".repeat((length - width) / 4))
-                            .append(".".repeat((length - width) % 4)).color(ChatColor.DARK_GRAY.asBungee())
-                            .append("|").color(ChatColor.YELLOW.asBungee())
-                            .create());
-        }
-    }
+    public void checkWinConditions() {
 
-    private void formatMessage(TextComponent line, List<TextComponent> list) {
-        int width = MinecraftFont.Font.getWidth(ChatColor.stripColor(line.toPlainText()));
-        int length = 235;
-        if (width > length) {
-            String[] split = line.getText().split(", ");
-            String[] segments = split;
-            while (width > length) {
-                segments = Arrays.copyOf(segments, segments.length - 1);
-                width = MinecraftFont.Font.getWidth(ChatColor.stripColor(
-                        Arrays.toString(segments)
-                                .replaceAll("[\\[\\]]", "")
-                ));
-            }
-            list.add(componentToText(
-                    new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
-                            .append("|   ").color(ChatColor.YELLOW.asBungee())
-                            .append(Arrays.toString(segments).replaceAll("[\\[\\]]", ""))
-                            .append(" ".repeat((length - width) / 4))
-                            .append(".".repeat((length - width) % 4)).color(ChatColor.DARK_GRAY.asBungee())
-                            .append("|").color(ChatColor.YELLOW.asBungee())
-                            .create()));
-            formatMessage(new TextComponent(Arrays.toString(
-                    Arrays.copyOfRange(
-                            split, split.length - segments.length + 1, split.length))
-                    .replaceAll("[\\[\\],]", "")), list);
-        } else {
-            list.add(componentToText(
-                    new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
-                            .append("|   ").color(ChatColor.YELLOW.asBungee())
-                            .append(line)
-                            .append(" ".repeat((length - width) / 4))
-                            .append(".".repeat((length - width) % 4)).color(ChatColor.DARK_GRAY.asBungee())
-                            .append("|").color(ChatColor.YELLOW.asBungee())
-                            .create()));
-        }
-    }
-
-    private TextComponent componentToText(BaseComponent[] components) {
-        TextComponent textComponent = new TextComponent();
-        for (BaseComponent component : components) {
-            textComponent.addExtra(component);
-        }
-        return textComponent;
     }
 
     /*

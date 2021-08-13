@@ -2,8 +2,11 @@ name: ManhuntPlugin
 version: ${project.version}
 main: me.melonboy10.manhuntplugin.ManhuntPlugin
 api-version: 1.17
-authors: [melonboy10]
+authors: [melonboy10, Enderlord0042]
 description: Manhunt plugin
+
+depend:
+    - drink
 
 commands:
     create:

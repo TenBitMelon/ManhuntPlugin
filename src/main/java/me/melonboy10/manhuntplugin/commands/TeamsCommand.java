@@ -2,7 +2,6 @@ package me.melonboy10.manhuntplugin.commands;
 
 import com.jonahseguin.drink.annotation.Command;
 import com.jonahseguin.drink.annotation.Sender;
-import me.melonboy10.manhuntplugin.ManhuntGameOld;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -10,13 +9,13 @@ public class TeamsCommand{
 
      /*
      * This is for the clicking in the text menu
-     * This is also for displaying the teams menu why in a game
+     * This is also for displaying the teams menu while in a game
      */
 
     @Command(name = "", aliases = {"join"}, desc = "Open the teams menu")
     public void root(@Sender CommandSender sender) {
         if (sender instanceof Player) {
-            ManhuntGameOld.teamsMenu.open(((Player) sender));
+
         }
     }
 
