@@ -1,5 +1,6 @@
 package me.melonboy10.manhuntplugin.menuSystem.menus;
 
+import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.commands.CreateGameCommand;
 import me.melonboy10.manhuntplugin.game.ManhuntGame;
 import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
@@ -18,6 +19,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -41,8 +43,10 @@ public class CreateGameMenu extends Menu {
     private final ManhuntGameSettings settings;
     private final LinkedList<Player> invitedPlayers = new LinkedList<>();
     private boolean worldChange = true;
+    private final Player creator;
 
-    public CreateGameMenu(String seed) {
+    public CreateGameMenu(String seed, Player creator) {
+        this.creator = creator;
         if (seed.isBlank())
             settings = new ManhuntGameSettings();
         else
@@ -62,6 +66,7 @@ public class CreateGameMenu extends Menu {
     @Override
     public void clickEvent(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
+        if (!player.equals(creator)) return;
         switch (event.getSlot()) {
 //            Difficulty
             case 10 -> {
@@ -74,7 +79,7 @@ public class CreateGameMenu extends Menu {
                 worldChange = true;
                 setMenuItems();
             }
-//            Seed
+//            Seed TODO: Add a favorite seeds menu
             case 12 -> {
                 switch (event.getClick()) {
                     case LEFT, SHIFT_LEFT, MIDDLE, DROP, CONTROL_DROP, CREATIVE, SWAP_OFFHAND -> {
@@ -84,19 +89,19 @@ public class CreateGameMenu extends Menu {
                                 .text("Enter Seed")
                                 .title("Enter the world seed!")
                                 .plugin(plugin)
-                                .onClose((player1 -> {
-                                    player1.openInventory(this.inventory);
-                                }))
+                                .onClose(player1 -> {
+                                    new BukkitRunnable() {
+                                        @Override
+                                        public void run() {
+                                            open(player);
+                                        }
+                                    }.runTaskLater(plugin, 1);
+                                })
                                 .onLeftInputClick((player1 -> {
                                     player1.openInventory(this.inventory);
                                 }))
                                 .onComplete((player1, text) -> {
-                                    try {
-                                        settings.setSeed(Long.parseLong(text));
-                                    } catch (Exception e) {
-                                        settings.setSeed(text.hashCode());
-                                    }
-//                                    this.setMenuItems();
+                                    settings.setSeed(text);
                                     return AnvilGUI.Response.openInventory(this.inventory);
                                 })
                                 .open(player);
@@ -138,11 +143,17 @@ public class CreateGameMenu extends Menu {
 //            Hunter Delay
             case 15 -> {
                 switch (event.getClick()) {
-                    case LEFT, SHIFT_LEFT, MIDDLE, DROP, SWAP_OFFHAND, CONTROL_DROP -> {
+                    case LEFT, MIDDLE, DROP, SWAP_OFFHAND, CONTROL_DROP -> {
                         settings.setHunterCooldown(settings.getHunterCooldown() + 1);
                     }
-                    case RIGHT, SHIFT_RIGHT -> {
+                    case SHIFT_LEFT -> {
+                        settings.setHunterCooldown(settings.getHunterCooldown() + 10);
+                    }
+                    case RIGHT -> {
                         settings.setHunterCooldown(Math.max(settings.getHunterCooldown() - 1, 0));
+                    }
+                    case SHIFT_RIGHT -> {
+                        settings.setHunterCooldown(Math.max(settings.getHunterCooldown() - 10, 0));
                     }
                 }
                 setMenuItems();
@@ -156,6 +167,12 @@ public class CreateGameMenu extends Menu {
                         .title("Enter a player!")
                         .plugin(plugin)
                         .onClose((player1 -> {
+                            new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    open(player);
+                                }
+                            }.runTaskLater(plugin, 1);
                             player1.openInventory(this.inventory);
                         }))
                         .onLeftInputClick((player1 -> {
@@ -184,6 +201,7 @@ public class CreateGameMenu extends Menu {
 
                     ManhuntGame game = new ManhuntGame(settings, player, invitedPlayers, inventory.getItem(13));
                     ManhuntGameManager.add(game);
+                    player.closeInventory();
                 }
             }
         }
@@ -269,8 +287,9 @@ public class CreateGameMenu extends Menu {
                 ChatColor.AQUA + "Set Hunter Cooldown:",
                 ChatColor.GRAY + "" + settings.getHunterCooldown(),
                 "",
-                ChatColor.YELLOW + "Click to increase!",
-                ChatColor.YELLOW + "Right-Click to decrease!"
+                ChatColor.YELLOW + "Left-Click to increase!",
+                ChatColor.YELLOW + "Right-Click to decrease!",
+                ChatColor.YELLOW + "Shift-Click to go faster!"
             ));
 
         ItemStack inviteItem = makeItem(Material.NAME_TAG,
@@ -347,8 +366,16 @@ public class CreateGameMenu extends Menu {
     }
 
     private ItemStack createMapItem() {
-        File finder = new File(plugin.getDataFolder().getPath() + "/generateMapPreview");
+        File finder;
+        switch (ManhuntPlugin.operatingSystem) {
+            case WINDOWS -> finder = new File(plugin.getDataFolder().getPath() + "/generateMapPreview_windows");
+            case MAC -> finder = new File(plugin.getDataFolder().getPath() + "/generateMapPreview_mac");
+            case LINUS -> finder = new File(plugin.getDataFolder().getPath() + "/generateMapPreview_linux");
+            case CENTOS -> finder = new File(plugin.getDataFolder().getPath() + "/generateMapPreview_centos");
+            default -> {return new ItemStack(Material.BARRIER);}
+        }
         File rgbValues = new File(plugin.getDataFolder().getPath() + "/image.txt");
+
 
         try {
             new ProcessBuilder(finder.getAbsolutePath(),

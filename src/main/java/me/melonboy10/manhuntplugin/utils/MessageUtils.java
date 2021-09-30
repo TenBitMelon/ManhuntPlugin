@@ -12,9 +12,19 @@ import java.util.Arrays;
 public class MessageUtils {
 
     private static final int length = 235;
+    //✇✆♹♸♿♾♽♼♻♺
+    private static final String regex = "[⎘♽☒☑⛏⚔⧈♻🛡]";
 
-    public static void sendError(Player player, String content) {
-        player.sendMessage(ChatColor.RED + "⚠ " + content + ChatColor.RED + " ⚠");
+    public static void sendError(Player player, String error) {
+        player.sendMessage(ChatColor.RED + "⚠ " + error + ChatColor.RED + " ⚠");
+    }
+
+    public static void sendWarning(Player player, String warning) {
+        player.sendMessage(ChatColor.YELLOW + "⚠ " + warning + ChatColor.YELLOW + " ⚠");
+    }
+
+    public static void sendSuccess(Player player, String message) {
+        player.sendMessage(ChatColor.GREEN + "⚠ " + message + ChatColor.GREEN + " ⚠");
     }
 
     public static void sendLineBreak(Player player) {
@@ -26,7 +36,8 @@ public class MessageUtils {
     }
 
     public static void sendFormattedMessage(Player player, TextComponent line) {
-        int width = MinecraftFont.Font.getWidth(ChatColor.stripColor(line.toPlainText()));
+        int width = MinecraftFont.Font.getWidth(ChatColor.stripColor(line.toPlainText())
+            .replaceAll(regex, "...."));
         if (width > length) {
             player.spigot().sendMessage(
                     new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
@@ -51,7 +62,8 @@ public class MessageUtils {
     }
 
     public static void sendWrappedMessage(Player player, TextComponent line) {
-        int width = MinecraftFont.Font.getWidth(ChatColor.stripColor(line.toPlainText()));
+        int width = MinecraftFont.Font.getWidth(ChatColor.stripColor(line.toPlainText())
+            .replaceAll(regex, "...."));
         if (width > length) {
             String[] split = line.getText().split(" ");
             String[] segments = split;
@@ -86,5 +98,58 @@ public class MessageUtils {
             component.addExtra(baseComponent);
         }
         return component;
+    }
+
+    public static void sendEmptyLine(Player player) {
+        player.sendMessage("");
+    }
+
+    public static class Builder {
+
+        Player player;
+
+        public Builder(Player player) {
+            this.player = player;
+        }
+
+        public Builder blank() {
+            sendBlankLine(player);
+            return this;
+        }
+
+        public Builder lineBreak() {
+            sendLineBreak(player);
+            return this;
+        }
+
+        public Builder formatted(BaseComponent[] line) {
+            sendFormattedMessage(player, line);
+            return this;
+        }
+
+        public Builder formatted(String line) {
+            sendFormattedMessage(player, new TextComponent(line));
+            return this;
+        }
+
+        public Builder formatted(TextComponent line) {
+            sendFormattedMessage(player, line);
+            return this;
+        }
+
+        public Builder wrapped(BaseComponent[] line) {
+            sendWrappedMessage(player, line);
+            return this;
+        }
+
+        public Builder wrapped(TextComponent line) {
+            sendWrappedMessage(player, line);
+            return this;
+        }
+
+        public Builder keyVal(String key, Object value) {
+            sendFormattedMessage(player, new TextComponent(ChatColor.AQUA + key + ": " + (value != null ? ChatColor.WHITE : ChatColor.GRAY) + value));
+            return this;
+        }
     }
 }

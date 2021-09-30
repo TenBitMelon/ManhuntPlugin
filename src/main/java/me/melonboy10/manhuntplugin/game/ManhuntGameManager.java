@@ -14,6 +14,13 @@ public class ManhuntGameManager {
 
     public static void add(ManhuntGame game) {
         games.add(game);
+        for (Player player : game.getPlayers()) {
+            playerToGame.put(player, game);
+        }
+    }
+
+    public static void playerJointGame(Player player, ManhuntGame game) {
+        playerToGame.put(player, game);
     }
 
     public static List<ManhuntGame> getGames() {

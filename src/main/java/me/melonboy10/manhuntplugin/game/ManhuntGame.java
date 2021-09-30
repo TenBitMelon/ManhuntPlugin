@@ -19,15 +19,13 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 
 public class ManhuntGame {
 
     private static final ManhuntPlugin plugin = ManhuntPlugin.plugin;
 
-    public enum Team {RUNNER, HUNTER, SPECTATOR;}
+    public enum Team {RUNNER, HUNTER, SPECTATOR, UNKNOWN}
     public enum GameState {GENERATING, HUNTER_COOLDOWN, PLAYING, GAME_OVER;}
 
     private GameState gameState = GameState.GENERATING;
@@ -49,7 +47,7 @@ public class ManhuntGame {
     public ManhuntGame(ManhuntGameSettings settings, Player creator, LinkedList<Player> invitedPlayers, ItemStack item) {
         this.settings = settings;
         hunterCooldown = settings.getHunterCooldown();
-        teamTextMenu = new TeamSelectTextMenu(this, item);
+        teamTextMenu = new TeamSelectTextMenu(this);
         mapItem = item;
 
         forceInvitePlayer(creator);
@@ -58,14 +56,6 @@ public class ManhuntGame {
 
 
         //generate world
-    }
-
-    public Team getTeam(Player player) {
-        return players.getOrDefault(player, null);
-    }
-
-    public ArrayList<Player> getInvitedPlayers() {
-        return invitedPlayers;
     }
 
     public void forceInvitePlayer(Player creator) {
@@ -83,13 +73,12 @@ public class ManhuntGame {
         teamTextMenu.update();
         MessageUtils.sendLineBreak(player);
         MessageUtils.sendBlankLine(player);
-        MessageUtils.sendFormattedMessage(player, new TextComponent(ChatColor.GREEN + "You have been invited to a new Manhunt"));
-        MessageUtils.sendFormattedMessage(player, new TextComponent(ChatColor.GREEN + "You have been invited to a new Manhunt"));
+        MessageUtils.sendFormattedMessage(player, new TextComponent(ChatColor.GREEN + "You have been invited to a new Manhunt!"));
         MessageUtils.sendBlankLine(player);
         if (ManhuntGameManager.isPlayerInGame(player)) {
             MessageUtils.sendFormattedMessage(player, new TextComponent(ChatColor.RED + "You are already in a game so to join you"));
             MessageUtils.sendFormattedMessage(player,
-                    new ComponentBuilder(ChatColor.RED + "need to leave your game by typing ")
+                new ComponentBuilder(ChatColor.RED + "need to leave your game by typing ")
                     .append("/leave")
                     .color(ChatColor.GOLD.asBungee())
                     .event(new HoverEvent(
@@ -104,7 +93,18 @@ public class ManhuntGame {
             );
             MessageUtils.sendBlankLine(player);
         }
-        MessageUtils.sendFormattedMessage(player, new TextComponent(ChatColor.YELLOW + "You can join by typing or clicking /join " + this.hashCode()));
+        MessageUtils.sendFormattedMessage(player,
+            new ComponentBuilder(ChatColor.YELLOW + "You can join by typing or clicking").create()
+        );
+        MessageUtils.sendFormattedMessage(player, new ComponentBuilder(ChatColor.GOLD + "/join " + this.hashCode())
+                    .event(new HoverEvent(
+                            HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.GOLD + "/join " + this.hashCode())
+                    ))
+                    .event(new ClickEvent(
+                            ClickEvent.Action.SUGGEST_COMMAND, "/join " + this.hashCode()
+                    ))
+                .create()
+        );
         player.sendMessage(ChatColor.YELLOW + "+-----------------------------------------+");
     }
 
@@ -129,6 +129,7 @@ public class ManhuntGame {
         }
         if (gameState.equals(GameState.GENERATING)) {
             teamTextMenu.playerAcceptInvite(player);
+            ManhuntGameManager.playerJointGame(player, this);
         } else if (settings.getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)) {
             players.put(player, Team.SPECTATOR);
             teleportIntoGame(player);
@@ -189,10 +190,6 @@ public class ManhuntGame {
         }
     }
 
-    public boolean isWorldReady() {
-        return Bukkit.getWorld(world.getUID()) != null;
-    }
-
     public void playerLeave(Player player) {
         Team team = getTeam(player);
         if (team.equals(Team.RUNNER) || team.equals(Team.HUNTER) && (!gameState.equals(GameState.GENERATING) && !gameState.equals(GameState.GAME_OVER))) {
@@ -221,7 +218,58 @@ public class ManhuntGame {
 
     }
 
+
+
+
+    /** GETTERS */
+
+    public boolean isWorldReady() {
+        return world != null && Bukkit.getWorld(world.getUID()) != null;
+    }
+
+    public Team getTeam(Player player) {
+        if (gameState.equals(GameState.GENERATING)) {
+            return teamTextMenu.getTeam(player);
+        } else {
+            return players.getOrDefault(player, null);
+        }
+    }
+
+    public ArrayList<Player> getInvitedPlayers() {
+        return invitedPlayers;
+    }
+
+    public GameState getState() {
+        return gameState;
+    }
+
+    public Set<Player> getPlayers() {
+        Set<Player> set = new LinkedHashSet<>();
+        set.addAll(players.keySet());
+        set.addAll(teamTextMenu.getPlayers());
+        return set;
+    }
+
+    public TeamSelectTextMenu getTeamTextMenu() {
+        return teamTextMenu;
+    }
+
+    public ManhuntGameSettings getSettings() {
+        return settings;
+    }
+
+    public ItemStack getMapItem() {
+        return mapItem;
+    }
+
+
+
     /*
+
+    ⎛⎝(•ⱅ•)⎠⎞
+
+
+
      * Player Road Map - the player experience
      *
      * Player Joining to server

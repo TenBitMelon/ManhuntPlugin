@@ -28,8 +28,12 @@ public class ManhuntGameSettings {
         return seed;
     }
 
-    private void setSeed(String seed) {
-        this.seed = seed.hashCode();
+    public void setSeed(String seed) {
+        try {
+            setSeed(Long.parseLong(seed));
+        } catch (Exception e) {
+            setSeed(seed.hashCode());
+        }
     }
 
     public void setSeed(long seed) {
