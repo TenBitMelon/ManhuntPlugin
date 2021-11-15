@@ -5,9 +5,6 @@ import com.jonahseguin.drink.annotation.Sender;
 import me.melonboy10.manhuntplugin.game.ManhuntGame;
 import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
 import me.melonboy10.manhuntplugin.utils.MessageUtils;
-import net.wesjd.anvilgui.AnvilGUI;
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class InviteCommand {

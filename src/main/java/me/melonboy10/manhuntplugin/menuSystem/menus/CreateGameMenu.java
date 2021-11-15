@@ -149,59 +149,65 @@ public class CreateGameMenu extends Menu {
                     case SHIFT_LEFT -> {
                         settings.setHunterCooldown(settings.getHunterCooldown() + 10);
                     }
-                    case RIGHT -> {
-                        settings.setHunterCooldown(Math.max(settings.getHunterCooldown() - 1, 0));
-                    }
                     case SHIFT_RIGHT -> {
                         settings.setHunterCooldown(Math.max(settings.getHunterCooldown() - 10, 0));
+                    }
+                    case RIGHT -> {
+                        settings.setHunterCooldown(Math.max(settings.getHunterCooldown() - 1, 0));
                     }
                 }
                 setMenuItems();
             }
 //            Invites
             case 16 -> {
-                AnvilGUI.Builder builder = new AnvilGUI.Builder();
-                builder
-                        .itemLeft(makeItem(Material.NAME_TAG, "", "", ChatColor.RED + "Click to close!"))
-                        .text("Enter Player Name")
-                        .title("Enter a player!")
-                        .plugin(plugin)
-                        .onClose((player1 -> {
-                            new BukkitRunnable() {
-                                @Override
-                                public void run() {
-                                    open(player);
-                                }
-                            }.runTaskLater(plugin, 1);
-                            player1.openInventory(this.inventory);
-                        }))
-                        .onLeftInputClick((player1 -> {
-                            player1.openInventory(this.inventory);
-                        }))
-                        .onComplete((player1, text) -> {
-                            Player player2 = Bukkit.getPlayerExact(text);
-                            if (player2 != null && player2.isOnline()) {
-                                if (player2 != player1) {
-                                    invitedPlayers.add(player2);
-                                    this.setMenuItems();
-                                    return AnvilGUI.Response.openInventory(this.inventory);
+                switch (event.getClick()) {
+                    case LEFT, MIDDLE, DROP, SWAP_OFFHAND, CONTROL_DROP, SHIFT_LEFT -> {
+                        AnvilGUI.Builder builder = new AnvilGUI.Builder();
+                        builder
+                            .itemLeft(makeItem(Material.NAME_TAG, "", "", ChatColor.RED + "Click to close!"))
+                            .text("Enter Player Name")
+                            .title("Enter a player!")
+                            .plugin(plugin)
+                            .onClose((player1 -> {
+                                new BukkitRunnable() {
+                                    @Override
+                                    public void run() {
+                                        open(player);
+                                    }
+                                }.runTaskLater(plugin, 1);
+                                player1.openInventory(this.inventory);
+                            }))
+                            .onLeftInputClick((player1 -> {
+                                player1.openInventory(this.inventory);
+                            }))
+                            .onComplete((player1, text) -> {
+                                Player player2 = Bukkit.getPlayerExact(text);
+                                if (player2 != null && player2.isOnline()) {
+                                    if (player2 != player1 && !invitedPlayers.contains(player2)) {
+                                        invitedPlayers.add(player2);
+                                        this.setMenuItems();
+                                        return AnvilGUI.Response.openInventory(this.inventory);
+                                    } else {
+                                        return AnvilGUI.Response.text("You cannot invite yourself!");
+                                    }
                                 } else {
-                                    return AnvilGUI.Response.text("You cannot invite yourself!");
+                                    return AnvilGUI.Response.text("That player doesn't exist or is offline!");
                                 }
-                            } else {
-                                return AnvilGUI.Response.text("That player doesn't exist or is offline!");
-                            }
-                        })
-                        .open(player);
+                            })
+                            .open(player);
+                    }
+                    case RIGHT, SHIFT_RIGHT -> {
+                        invitedPlayers.removeLast();
+                        setMenuItems();
+                    }
+                }
             }
 //            Create button
             case 22 -> {
                 if (event.getClick().equals(ClickType.DOUBLE_CLICK)) {
-                    CreateGameCommand.playerMenuMap.put(player, null);
-
-                    ManhuntGame game = new ManhuntGame(settings, player, invitedPlayers, inventory.getItem(13));
-                    ManhuntGameManager.add(game);
                     player.closeInventory();
+                    CreateGameCommand.playerMenuMap.remove(player);
+                    new ManhuntGame(settings, player, invitedPlayers, inventory.getItem(13));
                 }
             }
         }
