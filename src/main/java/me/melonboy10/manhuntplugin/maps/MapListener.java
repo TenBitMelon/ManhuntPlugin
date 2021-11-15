@@ -3,7 +3,6 @@ package me.melonboy10.manhuntplugin.maps;
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.commands.CreateGameCommand;
 import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
-import me.melonboy10.manhuntplugin.menuSystem.menus.CreateGameMenu;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;

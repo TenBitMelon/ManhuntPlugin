@@ -1,8 +1,11 @@
 package me.melonboy10.manhuntplugin.game;
 
-import me.melonboy10.manhuntplugin.menuSystem.menus.CreateGameMenu;
+import me.melonboy10.manhuntplugin.ManhuntPlugin;
+import org.apache.commons.io.FileUtils;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,12 +17,12 @@ public class ManhuntGameManager {
 
     public static void add(ManhuntGame game) {
         games.add(game);
-        for (Player player : game.getPlayers()) {
-            playerToGame.put(player, game);
+        for (Player player : game.getPlayers().keySet()) {
+            playerJoinGame(player, game);
         }
     }
 
-    public static void playerJointGame(Player player, ManhuntGame game) {
+    public static void playerJoinGame(Player player, ManhuntGame game) {
         playerToGame.put(player, game);
     }
 
@@ -45,5 +48,24 @@ public class ManhuntGameManager {
 
     public static boolean isPlayerInGame(Player player, ManhuntGame manhuntGame) {
         return !playerToGame.get(player).equals(manhuntGame);
+    }
+
+    public static void playerLeaveGame(ManhuntGame manhuntGame, Player player) {
+        playerToGame.remove(player);
+    }
+
+    public static void clearGames() {
+        playerToGame.forEach((player, manhuntGame) -> {
+            manhuntGame.playerLeave(player);
+        });
+        for (ManhuntGame game : games) {
+            try {
+                FileUtils.deleteDirectory(game.getOverworld().getWorldFolder());
+                FileUtils.deleteDirectory(game.getNether().getWorldFolder());
+                FileUtils.deleteDirectory(game.getEnd().getWorldFolder());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

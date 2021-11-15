@@ -4,9 +4,7 @@ import com.jonahseguin.drink.annotation.Command;
 import com.jonahseguin.drink.annotation.Sender;
 import me.melonboy10.manhuntplugin.game.ManhuntGame;
 import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
-import me.melonboy10.manhuntplugin.game.ManhuntGameSettings;
 import me.melonboy10.manhuntplugin.utils.MessageUtils;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class TeamsCommand{

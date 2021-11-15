@@ -5,15 +5,12 @@ import com.jonahseguin.drink.annotation.Sender;
 import me.melonboy10.manhuntplugin.game.ManhuntGame;
 import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
 import me.melonboy10.manhuntplugin.utils.MessageUtils;
-import org.bukkit.ChatColor;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class JoinCommand {
 
     @Command(name = "", desc = "Used to join a game.")
     public void root(@Sender Player sender, int gameID) {
-        //TODO: Not sending error if player in game
         if (!ManhuntGameManager.isPlayerInGame(sender)) {
             ManhuntGame game = ManhuntGameManager.getGame(gameID);
             if (game != null) {

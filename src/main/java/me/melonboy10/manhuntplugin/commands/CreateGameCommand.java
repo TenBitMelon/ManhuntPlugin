@@ -24,9 +24,6 @@ public class CreateGameCommand {
     @Command(name = "", desc = "Create a new game")
     public void root(@Sender CommandSender sender, @OptArg(" ") String seed) {
         if (sender instanceof Player) {
-            if (ManhuntGameManager.isPlayerInGame((Player) sender)) {
-                MessageUtils.sendError(((Player) sender), "You are currently in a game. Type /leave to leave the game.");
-            }
             if (playerMenuMap.containsKey((Player) sender)) {
                 if (playerMenuMap.get(((Player) sender)) != null) {
                     playerMenuMap.get((Player) sender).open((Player) sender);
@@ -34,9 +31,13 @@ public class CreateGameCommand {
                     MessageUtils.sendError(((Player) sender), "You are already creating a game!");
                 }
             } else {
-                CreateGameMenu menu = new CreateGameMenu(seed, (Player) sender);
-                playerMenuMap.put((Player) sender, menu);
-                menu.open((Player) sender);
+                if (ManhuntGameManager.isPlayerInGame((Player) sender)) {
+                    MessageUtils.sendError(((Player) sender), "You are currently in a game. Type /leave to leave the game.");
+                } else {
+                    CreateGameMenu menu = new CreateGameMenu(seed, (Player) sender);
+                    playerMenuMap.put((Player) sender, menu);
+                    menu.open((Player) sender);
+                }
             }
         }
     }

@@ -1,9 +1,9 @@
 package me.melonboy10.manhuntplugin.menuSystem.menus;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.destroystokyo.paper.Title;
+import com.google.common.collect.HashBiMap;
+import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.game.ManhuntGame;
-import me.melonboy10.manhuntplugin.utils.ConfigurationSerializableAdapter;
 import me.melonboy10.manhuntplugin.utils.MessageUtils;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.*;
@@ -11,8 +11,9 @@ import net.md_5.bungee.api.chat.hover.content.Item;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.apache.commons.lang.BooleanUtils;
 import org.bukkit.Material;
-import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
@@ -21,15 +22,39 @@ import static org.bukkit.ChatColor.*;
 public class TeamSelectTextMenu {
 
     private final ManhuntGame game;
-    // Players who have joined the game
-    private final HashMap<Player, ManhuntGame.Team> players = new HashMap<>();
+    // Contains all players that have joined the game
+    private final HashBiMap<Player, ManhuntGame.Team> players;
+    // Contains all players from "players" that have clicked ready
     private final ArrayList<Player> readyPlayers = new ArrayList<>();
     private final String serializedMap;
+    private int countDown = -1;
+    private BukkitTask runnable;
 
-
+    /**
+     * This Object should be nulled once the game starts
+     * @param game The MahuntGame using this
+     */
     public TeamSelectTextMenu(ManhuntGame game) {
         this.game = game;
-        this.serializedMap = "";
+        this.players = game.getPlayers();
+
+        StringBuilder builder = new StringBuilder("{display:{Name:'{\"text\":\"World Preview\",\"color\":\"yellow\",\"italic\":false}',Lore:[");
+        List<String> lores = game.getMapItem().getItemMeta().getLore();
+        lores.remove(0);
+        lores.remove(lores.size() - 1);
+        for (String lore : lores) {
+            builder.append("'[");
+            for (String character : lore.split("(?<=\\G...............)")) {
+                String hex = character.substring(2, character.length() - 1).replaceAll(Character.toString(COLOR_CHAR), "");
+                builder.append("{\"text\":\"█\",\"color\":\"#" + hex + "\",\"italic\":false},");
+            }
+            builder.deleteCharAt(builder.length() - 1);
+            builder.append("]',");
+        }
+        builder.deleteCharAt(builder.length() - 1);
+        builder.append("]}}");
+
+        this.serializedMap = builder.toString();
     }
 
     // Invited players
@@ -38,9 +63,6 @@ public class TeamSelectTextMenu {
     }
 
     public void update() { // ☑☒⎆⎘♽
-        System.out.println("----------------------------------------------------");
-        System.out.println(serializedMap);
-        System.out.println("----------------------------------------------------");
         for (Player player : players.keySet()) {
             MessageUtils.sendEmptyLine(player);
             MessageUtils.sendEmptyLine(player);
@@ -55,18 +77,19 @@ public class TeamSelectTextMenu {
             MessageUtils.sendEmptyLine(player);
             MessageUtils.sendEmptyLine(player);
             MessageUtils.sendLineBreak(player);
+            MessageUtils.sendBlankLine(player);
             MessageUtils.sendFormattedMessage(player,
                 new ComponentBuilder("Status").color(ChatColor.AQUA)
-                    .append(":").color(ChatColor.DARK_GRAY)
-                    .append("    ♻").color(game.isWorldReady() ? ChatColor.GREEN : ChatColor.GRAY)
+                    .append(":  ").color(ChatColor.DARK_GRAY)
+                    .append("  ♻  ").color(game.isWorldReady() ? ChatColor.GREEN : ChatColor.GRAY)
                     .event(new HoverEvent(
                             HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.DARK_GRAY + "World Generation Done: " + BooleanUtils.toStringYesNo(game.isWorldReady()))
                     ))
-                    .append("    ⚔").color(readyPlayers.size() == players.size() ? ChatColor.GREEN : ChatColor.GRAY)
+                    .append("  " + (countDown > 0 ? countDown + "  " : "⚔  ")).color(readyPlayers.size() == players.size() ? ChatColor.GREEN : ChatColor.GRAY)
                     .event(new HoverEvent(
                         HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.DARK_GRAY + "Everyone Ready: " + BooleanUtils.toStringYesNo(readyPlayers.size() == players.size()))
                     ))
-                    .append("    ⛏").color(ChatColor.DARK_AQUA)
+                    .append("  ⛏  ").color(ChatColor.DARK_AQUA)
                     .event(new HoverEvent(
                         HoverEvent.Action.SHOW_ITEM, new Item(Material.MELON_SLICE.toString().toLowerCase(), 1, ItemTag.ofNbt(
                             "{" +
@@ -101,17 +124,16 @@ public class TeamSelectTextMenu {
                                             "{\"text\":\" " + game.getSettings().getPrivacy() + "\",\"color\":\"gray\",\"italic\":false}" +
                                         "]'" +
                                     "]" +
-                                "}," +
-                                "HideFlags:32" +
+                                "}" +
                             "}"))
-                    )).append("    🛡").color(ChatColor.DARK_AQUA)
-//                    .event(new HoverEvent(
-//                        HoverEvent.Action.SHOW_ITEM, new Item(Material.MELON_SLICE.toString().toLowerCase(), 1, ItemTag.ofNbt(
-//                            gson.toJson(game.getMapItem().getItemMeta())
-//                        ))
-//                    ))
-                    .append("   |   ").color(ChatColor.DARK_GRAY)
-                    .append(readyPlayers.contains(player) ? ChatColor.GREEN + "☑": ChatColor.RED + "☒")
+                    )).append("  🛡").color(ChatColor.DARK_AQUA)
+                    .event(new HoverEvent(
+                        HoverEvent.Action.SHOW_ITEM, new Item(Material.MELON_SLICE.toString().toLowerCase(), 1, ItemTag.ofNbt(
+                            serializedMap
+                        ))
+                    ))
+                    .append("   |").color(ChatColor.DARK_GRAY)
+                    .append(readyPlayers.contains(player) ? ChatColor.GREEN + "   ☑   ": ChatColor.RED + "   ☒   ")
                     .event(new HoverEvent(
                             HoverEvent.Action.SHOW_TEXT, new Text(readyPlayers.contains(player) ? ChatColor.GREEN + "Ready" : ChatColor.RED + "Unready")
                     ))
@@ -120,6 +142,9 @@ public class TeamSelectTextMenu {
                     ))
                     .create()
             );
+            if ( countDown > 0) {
+                player.sendTitle(new Title("", ChatColor.GREEN + "" + countDown));
+            }
             MessageUtils.sendBlankLine(player);
             MessageUtils.sendWrappedMessage(player,
                 new TextComponent(getPlayerList())
@@ -166,7 +191,38 @@ public class TeamSelectTextMenu {
             );
             MessageUtils.sendBlankLine(player);
             MessageUtils.sendLineBreak(player);
+            if (runnable == null && checkReady()) {
+                beginCountDown();
+            }
         }
+    }
+
+    private void beginCountDown() {
+        countDown = 10;
+
+        runnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (checkReady()) {
+                    if (countDown < 0) {
+                        game.startGame();
+                        cancel();
+                    } else {
+                        countDown--;
+                        update();
+                    }
+                } else {
+                    cancel();
+                }
+            }
+
+            @Override
+            public synchronized void cancel() throws IllegalStateException {
+                countDown = -1;
+                runnable = null;
+                super.cancel();
+            }
+        }.runTaskTimer(ManhuntPlugin.plugin, 0, 20);
     }
 
     private String getPlayerList() {
@@ -175,25 +231,29 @@ public class TeamSelectTextMenu {
         tempPlayers.addAll(invitedPlayers());
         StringBuilder builder = new StringBuilder();
         tempPlayers.forEach((player -> {
+            boolean invitee = false;
             ManhuntGame.Team team = players.getOrDefault(player, ManhuntGame.Team.UNKNOWN);
             switch (team) {
                 case RUNNER -> builder.append(ChatColor.GREEN + player.getDisplayName());
                 case HUNTER -> builder.append(ChatColor.RED + player.getDisplayName());
                 case SPECTATOR -> builder.append(ChatColor.GRAY + player.getDisplayName());
-                default -> builder.append(ChatColor.DARK_GRAY + player.getDisplayName());
+                default -> {
+                    builder.append(ChatColor.DARK_GRAY + player.getDisplayName());
+                    invitee = true;
+                }
             }
-            if (readyPlayers.contains(player)) {
-                builder.append(ChatColor.DARK_GRAY + " : " + ChatColor.GREEN + "☑ ");
-            } else {
-                builder.append(ChatColor.DARK_GRAY + " : " + ChatColor.RED + "☒ ");
+            if (!invitee) {
+                if (readyPlayers.contains(player)) {
+                    builder.append(ChatColor.DARK_GRAY + " : " + ChatColor.GREEN + "☑ ");
+                } else {
+                    builder.append(ChatColor.DARK_GRAY + " : " + ChatColor.RED + "☒ ");
+                }
             }
         }));
-
         return builder.toString();
     }
 
     public void playerAcceptInvite(Player... addedPlayers) {
-        System.out.println(players);
         for (Player player : addedPlayers) {
             players.put(player, ManhuntGame.Team.SPECTATOR);
         }
@@ -227,5 +287,11 @@ public class TeamSelectTextMenu {
             readyPlayers.add(player);
         }
         update();
+    }
+
+    private boolean checkReady() {
+        boolean simpleCheck = game.isWorldReady() && readyPlayers.size() == players.size();
+        boolean enoughRunners = players.containsValue(ManhuntGame.Team.HUNTER) && players.containsValue(ManhuntGame.Team.RUNNER);
+        return  simpleCheck && enoughRunners;
     }
 }
