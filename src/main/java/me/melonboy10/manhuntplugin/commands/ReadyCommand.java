@@ -12,7 +12,6 @@ public class ReadyCommand {
 
     @Command(name = "", desc = "Used to ready and unready in a game!")
     public void root(@Sender Player player) {
-        //TODO: Ready not working when player /joins the game
         if (ManhuntGameManager.isPlayerInGame(player)) {
             ManhuntGame game = ManhuntGameManager.getGame(player);
             if (game.getState().equals(GENERATING)) {

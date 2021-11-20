@@ -2,7 +2,6 @@ package me.melonboy10.manhuntplugin.game;
 
 import com.destroystokyo.paper.Title;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Maps;
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.menuSystem.menus.TeamSelectMenu;
 import me.melonboy10.manhuntplugin.menuSystem.menus.TeamSelectTextMenu;
@@ -13,20 +12,20 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.*;
-import org.bukkit.block.Biome;
 import org.bukkit.entity.Player;
-import org.bukkit.generator.BiomeProvider;
-import org.bukkit.generator.WorldInfo;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.CompassMeta;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 public class ManhuntGame {
@@ -34,10 +33,11 @@ public class ManhuntGame {
     private static final ManhuntPlugin plugin = ManhuntPlugin.plugin;
 
     public enum Team {RUNNER, HUNTER, SPECTATOR, UNKNOWN;}
+
     public enum GameState {GENERATING, HUNTER_COOLDOWN, PLAYING, GAME_OVER;}
     private GameState gameState = GameState.GENERATING;
-
     private final ManhuntGameSettings settings;
+
     private World overworld;
     private World nether;
     private World end;
@@ -45,17 +45,16 @@ public class ManhuntGame {
     private final TeamSelectTextMenu teamTextMenu;
     private TeamSelectMenu teamMenu;
     private BukkitTask gameRunnable;
-
     private final ItemStack mapItem;
+
     private final Player creator;
     private final ArrayList<Player> invitedPlayers = new ArrayList<>();
-    private final HashBiMap<Player, Team> players = HashBiMap.create();
-
+    private final HashMap<Player, Team> players = new HashMap<>();
     private final HashMap<Player, PlayerInventory> quitPlayerInventory = new HashMap<>();
+
     private final HashMap<Player, Location> quitPlayerLocation = new HashMap<>();
     private final HashMap<Player, Team> quitPlayerTeam = new HashMap<>();
     private final HashMap<Player, BukkitTask> quitPlayerTimer = new HashMap<>();
-
     public ManhuntGame(ManhuntGameSettings settings, Player creator, LinkedList<Player> invitedPlayers, ItemStack item) {
         this.settings = settings;
         hunterCooldown = settings.getHunterCooldown();
@@ -214,36 +213,50 @@ public class ManhuntGame {
             teleportIntoGame(player);
             player.sendTitle(new Title("", ""));
         }
-//        gameRunnable = new BukkitRunnable() {
-//            @Override
-//            public void run() {
-//                players.forEach((player, team) -> {
-//                    switch (team) {
-//                        case HUNTER -> {
-//                            ItemStack itemInMainHand = player.getInventory().getItemInMainHand();
-//                            if (itemInMainHand.getType().equals(Material.COMPASS)) {
-//                                CompassMeta itemMeta = (CompassMeta) itemInMainHand.getItemMeta();
-//                                itemMeta.setLodestoneTracked(true);
-//                                itemMeta.setLodestone(getClosestPlayer(player.getLocation(), Team.RUNNER).getLocation());
-//                            } else if (player.getInventory().getItemInOffHand().getType().equals(Material.COMPASS)) {
-//
-//                            }
-//                        }
-//                        case RUNNER -> {
-//
-//                        }
-//                        case SPECTATOR -> {
-//
-//                        }
-//                    }
-//                });
-//            }
-//        }.runTaskTimer(plugin, 0, 20);
+        gameRunnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                players.forEach((player, team) -> {
+                    if (team.equals(Team.HUNTER)) {
+                        ItemStack compass = new ItemStack(Material.COMPASS);
+                        CompassMeta itemMeta = (CompassMeta) compass.getItemMeta();
+                        itemMeta.setLodestoneTracked(false);
+                        Player trackedPlayer = getClosestPlayer(player.getLocation(), Team.RUNNER);
+                        if (trackedPlayer != null) {
+                            itemMeta.setLodestone(trackedPlayer.getLocation());
+                        }
+                        compass.setItemMeta(itemMeta);
+
+                        if (player.getInventory().getItemInMainHand().getType().equals(Material.COMPASS)) {
+                            player.getInventory().setItemInMainHand(compass);
+                        } else if (player.getInventory().getItemInOffHand().getType().equals(Material.COMPASS)) {
+                            player.getInventory().setItemInOffHand(compass);
+                        } else if (player.getItemOnCursor().getType().equals(Material.COMPASS)) {
+
+                        } else if (!player.getInventory().contains(Material.COMPASS)) {
+                            player.getInventory().addItem(compass);
+                        }
+                    }
+                });
+            }
+        }.runTaskTimer(plugin, 0, 20);
     }
 
-//    private Player getClosestPlayer(Location location, Team team) {
-//        players.inverse().
-//    }
+    @Nullable
+    private Player getClosestPlayer(Location location, Team team) {
+        final Player[] closest = new Player[1];
+        final Double[] distance = {Double.MAX_VALUE};
+        players.forEach((player, team1) -> {
+            if (team1.equals(team)) {
+                double distance1 = location.distanceSquared(player.getLocation());
+                if (distance1 < distance[0]) {
+                    closest[0] = player;
+                    distance[0] = distance1;
+                }
+            }
+        });
+        return closest[0];
+    }
 
     /**
      * Called when teleporting a player into a game
@@ -257,6 +270,7 @@ public class ManhuntGame {
         if (players.containsKey(player) || quitPlayerTimer.containsKey(player)) {
             player.teleport(overworld.getSpawnLocation());
             player.setBedSpawnLocation(overworld.getSpawnLocation(), true);
+            player.getInventory().clear();
             if (quitPlayerTimer.containsKey(player)) {
                 players.put(player, quitPlayerTeam.get(player));
                 player.getInventory().setContents(quitPlayerInventory.get(player).getContents());
@@ -307,18 +321,33 @@ public class ManhuntGame {
             players.remove(player);
             players.forEach((player1, team1) -> player1.sendMessage(ChatColor.RED + player1.getName() + " has left the game! They have 5 minutes to rejoin!"));
         }
-        player.getInventory().clear();
-        player.teleport(ManhuntPlugin.hubWorld.getSpawnLocation().clone().add(0.5, 0, 0.5));
-        player.setBedSpawnLocation(ManhuntPlugin.hubWorld.getSpawnLocation().clone().add(0.5, 0, 0.5), true);
-        player.setGameMode(GameMode.ADVENTURE);
-        ManhuntGameManager.playerLeaveGame(this, player);
+        ManhuntGameManager.playerLeaveGame(player);
+        ManhuntPlugin.sendPlayertoHub(player);
     }
 
     public void checkWinConditions() {
 
     }
 
+    public void playerDie(Player player) {
+        Team team = getTeam(player);
+        switch (team) {
+            case RUNNER -> {
+                player.setGameMode(GameMode.SPECTATOR);
+            }
+            case HUNTER -> {
 
+            }
+            case SPECTATOR -> {
+
+            }
+        }
+        checkWinConditions();
+    }
+
+    public void broadcastMessage(String message) {
+        players.forEach((player, team) -> player.sendMessage(message));
+    }
 
 
     /** GETTERS */
@@ -343,7 +372,7 @@ public class ManhuntGame {
         return gameState;
     }
 
-    public HashBiMap<Player, Team> getPlayers() {
+    public HashMap<Player, Team> getPlayers() {
         return players;
     }
 
@@ -373,6 +402,28 @@ public class ManhuntGame {
 
     public World getEnd() {
         return end;
+    }
+
+    public void shutDown() {
+        //Delete folders\
+        try {
+            Bukkit.getServer().unloadWorld(overworld, false);
+            Bukkit.getServer().unloadWorld(nether, false);
+            Bukkit.getServer().unloadWorld(end, false);
+            deleteDirectoryStream(overworld.getWorldFolder().toPath());
+            deleteDirectoryStream(nether.getWorldFolder().toPath());
+            deleteDirectoryStream(end.getWorldFolder().toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        gameRunnable.cancel();
+    }
+
+    void deleteDirectoryStream(Path path) throws IOException {
+        Files.walk(path)
+            .sorted(Comparator.reverseOrder())
+            .map(Path::toFile)
+            .forEach(File::delete);
     }
 
 

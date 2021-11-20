@@ -1,7 +1,6 @@
 package me.melonboy10.manhuntplugin.menuSystem.menus;
 
 import com.destroystokyo.paper.Title;
-import com.google.common.collect.HashBiMap;
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.game.ManhuntGame;
 import me.melonboy10.manhuntplugin.utils.MessageUtils;
@@ -23,7 +22,7 @@ public class TeamSelectTextMenu {
 
     private final ManhuntGame game;
     // Contains all players that have joined the game
-    private final HashBiMap<Player, ManhuntGame.Team> players;
+    private final HashMap<Player, ManhuntGame.Team> players;
     // Contains all players from "players" that have clicked ready
     private final ArrayList<Player> readyPlayers = new ArrayList<>();
     private final String serializedMap;
