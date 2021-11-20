@@ -4,13 +4,16 @@ import com.jonahseguin.drink.CommandService;
 import com.jonahseguin.drink.Drink;
 import me.melonboy10.manhuntplugin.commands.*;
 import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
-import me.melonboy10.manhuntplugin.listeners.EnterPortalListener;
-import me.melonboy10.manhuntplugin.listeners.WorldLoadListener;
+import me.melonboy10.manhuntplugin.listeners.*;
 import me.melonboy10.manhuntplugin.maps.MapListener;
+import me.melonboy10.manhuntplugin.menuSystem.Menu;
 import me.melonboy10.manhuntplugin.menuSystem.MenuListener;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.World;
+import org.bukkit.*;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.CompassMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ManhuntPlugin extends JavaPlugin {
@@ -20,6 +23,10 @@ public final class ManhuntPlugin extends JavaPlugin {
 
     public enum OS {WINDOWS, MAC, LINUS, CENTOS};
     public static OS operatingSystem = null;
+
+    public static ItemStack currentGamesItem;
+    public static ItemStack gameHistoryItem;
+    public static ItemStack createGameItem;
 
     @Override
     public void onEnable() {
@@ -38,6 +45,7 @@ public final class ManhuntPlugin extends JavaPlugin {
 
         registerListeners();
         setupFiles();
+        createItems();
 
         String os = System.getProperty("os.name").toLowerCase();
         System.out.println("OS is " + os + ".");
@@ -52,7 +60,6 @@ public final class ManhuntPlugin extends JavaPlugin {
         } else {
             System.out.println(ChatColor.RED + "No OS detected! You are using " + os + ", and it is not supported!");
         }
-
     }
 
     @Override
@@ -66,10 +73,45 @@ public final class ManhuntPlugin extends JavaPlugin {
         this.getServer().getPluginManager().registerEvents(new MapListener(), this);
         this.getServer().getPluginManager().registerEvents(new WorldLoadListener(), this);
         this.getServer().getPluginManager().registerEvents(new EnterPortalListener(), this);
+        this.getServer().getPluginManager().registerEvents(new DropItemListener(), this);
+        this.getServer().getPluginManager().registerEvents(new HubItemListener(), this);
+        this.getServer().getPluginManager().registerEvents(new PlayerLeaveListener(), this);
+        this.getServer().getPluginManager().registerEvents(new JoinServerListener(), this);
+        this.getServer().getPluginManager().registerEvents(new DeathListener(), this);
     }
 
     private void setupFiles() {
         this.getDataFolder().mkdir();
+    }
+
+    private void createItems() {
+        currentGamesItem = Menu.makeItem(
+            Material.COMPASS,
+            ChatColor.YELLOW + "Games in Progress"
+        );
+
+        gameHistoryItem = Menu.makeItem(
+            Material.WRITABLE_BOOK,
+            ChatColor.YELLOW + "Your Game History"
+        );
+
+        createGameItem = Menu.makeItem(
+            Material.GOLDEN_SWORD,
+            ChatColor.YELLOW + "Create Game"
+        );
+    }
+
+    public static void sendPlayertoHub(Player player) {
+        if (!ManhuntGameManager.isPlayerInGame(player)) {
+            player.teleport(ManhuntPlugin.hubWorld.getSpawnLocation().clone().add(0.5, 0, 0.5));
+            player.setBedSpawnLocation(ManhuntPlugin.hubWorld.getSpawnLocation().clone().add(0.5, 0, 0.5), true);
+            player.setGameMode(GameMode.ADVENTURE);
+
+            player.getInventory().clear();
+            player.getInventory().setItem(0, currentGamesItem);
+            player.getInventory().setItem(7, gameHistoryItem);
+            player.getInventory().setItem(8, createGameItem);
+        }
     }
 
 }

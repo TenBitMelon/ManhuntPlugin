@@ -3,7 +3,6 @@ package me.melonboy10.manhuntplugin.menuSystem.menus;
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.commands.CreateGameCommand;
 import me.melonboy10.manhuntplugin.game.ManhuntGame;
-import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
 import me.melonboy10.manhuntplugin.game.ManhuntGameSettings;
 import me.melonboy10.manhuntplugin.maps.ImageMapRenderer;
 import me.melonboy10.manhuntplugin.maps.MapListener;
@@ -115,6 +114,7 @@ public class CreateGameMenu extends Menu {
             }
 //            World Preview
             case 13 -> {
+                player.getInventory().setHeldItemSlot(4);
                 ItemStack map = new ItemStack(Material.FILLED_MAP);
                 MapMeta mapMeta = (MapMeta) map.getItemMeta();
 
