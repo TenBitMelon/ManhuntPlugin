@@ -16,19 +16,23 @@ public class InviteCommand {
             return;
         }
         ManhuntGame game = ManhuntGameManager.getGame(sender);
-        if (!player.isOnline()) {
-            MessageUtils.sendError(sender, "That player doesn't exist or is offline!");
-            return;
-        }
-        if (player == sender) {
-            MessageUtils.sendError(sender, "You cannot invite yourself!");
-            return;
-        }
-        game.invitePlayer(player);
-        if (ManhuntGameManager.isPlayerInGame(player)) {
-            MessageUtils.sendWarning(sender, "That player is already in a game. The invite was still sent!");
+        if (game.getCreator().equals(sender)) {
+            if (!player.isOnline()) {
+                MessageUtils.sendError(sender, "That player doesn't exist or is offline!");
+                return;
+            }
+            if (player == sender) {
+                MessageUtils.sendError(sender, "You cannot invite yourself!");
+                return;
+            }
+            game.invitePlayer(player);
+            if (ManhuntGameManager.isPlayerInGame(player)) {
+                MessageUtils.sendWarning(sender, "That player is already in a game. The invite was still sent!");
+            } else {
+                MessageUtils.sendSuccess(sender, "The invite was sent!");
+            }
         } else {
-            MessageUtils.sendSuccess(sender, "The invite was sent!");
+            MessageUtils.sendError(sender, "You are not the creator of the game!");
         }
     }
 }

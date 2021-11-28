@@ -1,17 +1,12 @@
 package me.melonboy10.manhuntplugin.menuSystem.menus;
 
-import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.game.ManhuntGame;
 import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
-import me.melonboy10.manhuntplugin.menuSystem.Menu;
 import me.melonboy10.manhuntplugin.menuSystem.PaginatedMenu;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.checkerframework.checker.units.qual.C;
 
 import java.util.List;
 

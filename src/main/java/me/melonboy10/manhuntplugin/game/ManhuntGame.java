@@ -1,11 +1,11 @@
 package me.melonboy10.manhuntplugin.game;
 
-import com.destroystokyo.paper.Title;
 import com.google.common.collect.HashBiMap;
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.menuSystem.menus.TeamSelectMenu;
 import me.melonboy10.manhuntplugin.menuSystem.menus.TeamSelectTextMenu;
 import me.melonboy10.manhuntplugin.utils.MessageUtils;
+import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -20,13 +20,13 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ManhuntGame {
 
@@ -211,7 +211,7 @@ public class ManhuntGame {
         gameState = GameState.HUNTER_COOLDOWN;
         for (Player player : players.keySet()) {
             teleportIntoGame(player);
-            player.sendTitle(new Title("", ""));
+            player.sendTitle("", "");
         }
         gameRunnable = new BukkitRunnable() {
             @Override
@@ -242,12 +242,11 @@ public class ManhuntGame {
         }.runTaskTimer(plugin, 0, 20);
     }
 
-    @Nullable
     private Player getClosestPlayer(Location location, Team team) {
         final Player[] closest = new Player[1];
         final Double[] distance = {Double.MAX_VALUE};
         players.forEach((player, team1) -> {
-            if (team1.equals(team)) {
+            if (team1.equals(team) && !player.getGameMode().equals(GameMode.SPECTATOR)) {
                 double distance1 = location.distanceSquared(player.getLocation());
                 if (distance1 < distance[0]) {
                     closest[0] = player;
@@ -271,12 +270,14 @@ public class ManhuntGame {
             player.teleport(overworld.getSpawnLocation());
             player.setBedSpawnLocation(overworld.getSpawnLocation(), true);
             player.getInventory().clear();
+
+            player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,hunterCooldown * 20 + 80, 250, true, false));
             if (quitPlayerTimer.containsKey(player)) {
                 players.put(player, quitPlayerTeam.get(player));
                 player.getInventory().setContents(quitPlayerInventory.get(player).getContents());
                 player.teleport(quitPlayerLocation.get(player));
                 quitPlayerTimer.get(player).cancel();
-
                 quitPlayerTimer.remove(player);
                 quitPlayerTeam.remove(player);
                 quitPlayerLocation.remove(player);
@@ -326,7 +327,59 @@ public class ManhuntGame {
     }
 
     public void checkWinConditions() {
+        System.out.println("Checking");
+        if (!gameState.equals(GameState.GAME_OVER)) {
+            System.out.println("Game not over");
+            if (isDragonDead()) {
+                System.out.println("dragon dead");
+                teamWins(Team.RUNNER);
+            } else if (
+                players.keySet().stream().noneMatch(player -> !player.getGameMode().equals(GameMode.SPECTATOR) && players.get(player).equals(Team.RUNNER)) &&
+                quitPlayerTeam.keySet().stream().noneMatch(player -> !player.getGameMode().equals(GameMode.SPECTATOR) && players.get(player).equals(Team.RUNNER))
+            ) {
+                System.out.println("no runners");
+                teamWins(Team.HUNTER);
+            } else if (
+                players.keySet().stream().noneMatch(player -> !player.getGameMode().equals(GameMode.SPECTATOR) && players.get(player).equals(Team.HUNTER)) &&
+                quitPlayerTeam.keySet().stream().noneMatch(player -> !player.getGameMode().equals(GameMode.SPECTATOR) && players.get(player).equals(Team.HUNTER))
+            ) {
+                System.out.println("no hunters");
+                teamWins(Team.RUNNER);
+            }
+            System.out.println("notin");
+        }
+    }
 
+    public void teamWins(Team team) {
+        gameState = GameState.GAME_OVER;
+        players.forEach((player, team1) -> {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 1000000, 100, true, false));
+            player.setAllowFlight(true);
+            player.setFlying(true);
+        });
+
+        switch (team) {
+            case RUNNER -> players.forEach((player, team1) -> player.sendTitle((team1.equals(Team.RUNNER) ? ChatColor.GOLD + "YOU WIN" : ""), ChatColor.GREEN + "Runners Win"));
+            case HUNTER -> players.forEach((player, team1) -> player.sendTitle((team1.equals(Team.HUNTER) ? ChatColor.GOLD + "YOU WIN" : ""), ChatColor.RED + "Hunters Win"));
+            case UNKNOWN -> players.forEach((player, team1) -> player.sendTitle("", ChatColor.GRAY + "Tie"));
+        }
+
+        new BukkitRunnable() {
+            int timeLeft = 30;
+            @Override
+            public void run() {
+                players.forEach((player, team1) -> player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("Teleporting back in " + timeLeft)));
+                timeLeft--;
+
+                if (timeLeft < 0) {
+                    players.forEach((player, team1) -> {
+                        playerLeave(player);
+                        ManhuntPlugin.sendPlayertoHub(player);
+                    });
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 0, 20);
     }
 
     public void playerDie(Player player) {
@@ -356,11 +409,18 @@ public class ManhuntGame {
         return overworld != null && Bukkit.getWorld(overworld.getUID()) != null;
     }
 
+    public boolean isDragonDead() {
+        if (end.getEnderDragonBattle() != null) {
+            return end.getEnderDragonBattle().getEnderDragon() != null && end.getEnderDragonBattle().getEnderDragon().isDead();
+        }
+        return false;
+    }
+
     public Team getTeam(Player player) {
         if (gameState.equals(GameState.GENERATING)) {
             return teamTextMenu.getTeam(player);
         } else {
-            return players.getOrDefault(player, null);
+            return players.getOrDefault(player, quitPlayerTeam.getOrDefault(player, null));
         }
     }
 
@@ -407,9 +467,9 @@ public class ManhuntGame {
     public void shutDown() {
         //Delete folders\
         try {
-            Bukkit.getServer().unloadWorld(overworld, false);
-            Bukkit.getServer().unloadWorld(nether, false);
-            Bukkit.getServer().unloadWorld(end, false);
+            Bukkit.unloadWorld(overworld, false);
+            Bukkit.unloadWorld(nether, false);
+            Bukkit.unloadWorld(end, false);
             deleteDirectoryStream(overworld.getWorldFolder().toPath());
             deleteDirectoryStream(nether.getWorldFolder().toPath());
             deleteDirectoryStream(end.getWorldFolder().toPath());
