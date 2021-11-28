@@ -11,10 +11,9 @@ import me.melonboy10.manhuntplugin.menuSystem.MenuListener;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BookMeta;
-import org.bukkit.inventory.meta.CompassMeta;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 public final class ManhuntPlugin extends JavaPlugin {
 
@@ -41,6 +40,7 @@ public final class ManhuntPlugin extends JavaPlugin {
         drink.register(new LeaveCommand(), "leave");
         drink.register(new ReadyCommand(), "ready");
         drink.register(new TeamsCommand(), "teams");
+        drink.register(new SaveSeedCommand(), "saveseed");
         drink.registerCommands();
 
         registerListeners();
@@ -106,6 +106,7 @@ public final class ManhuntPlugin extends JavaPlugin {
             player.teleport(ManhuntPlugin.hubWorld.getSpawnLocation().clone().add(0.5, 0, 0.5));
             player.setBedSpawnLocation(ManhuntPlugin.hubWorld.getSpawnLocation().clone().add(0.5, 0, 0.5), true);
             player.setGameMode(GameMode.ADVENTURE);
+            player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 1000000, 100, true, false));
 
             player.getInventory().clear();
             player.getInventory().setItem(0, currentGamesItem);

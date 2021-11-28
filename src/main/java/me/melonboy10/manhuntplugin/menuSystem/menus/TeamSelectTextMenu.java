@@ -1,6 +1,5 @@
 package me.melonboy10.manhuntplugin.menuSystem.menus;
 
-import com.destroystokyo.paper.Title;
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.game.ManhuntGame;
 import me.melonboy10.manhuntplugin.utils.MessageUtils;
@@ -142,7 +141,8 @@ public class TeamSelectTextMenu {
                     .create()
             );
             if ( countDown > 0) {
-                player.sendTitle(new Title("", ChatColor.GREEN + "" + countDown));
+                System.out.println("send ttile");
+                player.sendTitle("", ChatColor.GREEN + "" + countDown);
             }
             MessageUtils.sendBlankLine(player);
             MessageUtils.sendWrappedMessage(player,

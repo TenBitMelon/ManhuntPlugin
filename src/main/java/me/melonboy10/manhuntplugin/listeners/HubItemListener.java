@@ -1,24 +1,18 @@
 package me.melonboy10.manhuntplugin.listeners;
 
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
-import me.melonboy10.manhuntplugin.commands.CreateGameCommand;
 import me.melonboy10.manhuntplugin.menuSystem.menus.CreateGameMenu;
 import me.melonboy10.manhuntplugin.menuSystem.menus.GameHistoryMenu;
 import me.melonboy10.manhuntplugin.menuSystem.menus.GamesListMenu;
 import org.bukkit.GameMode;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-
-import static org.bukkit.Material.GOLDEN_SWORD;
-import static org.bukkit.Material.WRITTEN_BOOK;
 
 public class HubItemListener implements Listener {
 
