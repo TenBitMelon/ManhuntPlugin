@@ -82,31 +82,31 @@ public class CreateGameMenu extends Menu {
             case 12 -> {
                 switch (event.getClick()) {
                     case LEFT, SHIFT_LEFT, MIDDLE, DROP, CONTROL_DROP, CREATIVE, SWAP_OFFHAND -> {
-                        AnvilGUI.Builder builder = new AnvilGUI.Builder();
-                        builder
-                                .itemLeft(makeItem(Material.PAPER, "", "", ChatColor.RED + "Click to return!"))
-                                .text("Enter Seed")
-                                .title("Enter the world seed!")
-                                .plugin(plugin)
-                                .onClose(player1 -> {
-                                    new BukkitRunnable() {
-                                        @Override
-                                        public void run() {
-                                            open(player);
-                                        }
-                                    }.runTaskLater(plugin, 1);
-                                })
-                                .onLeftInputClick((player1 -> {
-                                    player1.openInventory(this.inventory);
-                                }))
-                                .onComplete((player1, text) -> {
-                                    settings.setSeed(text);
-                                    return AnvilGUI.Response.openInventory(this.inventory);
-                                })
-                                .open(player);
+                        settings.setSeed(new Random().nextLong());
                     }
                     case RIGHT, SHIFT_RIGHT -> {
-                        settings.setSeed(new Random().nextLong());
+                        AnvilGUI.Builder builder = new AnvilGUI.Builder();
+                        builder
+                            .itemLeft(makeItem(Material.PAPER, "", "", ChatColor.RED + "Click to return!"))
+                            .text("Enter Seed")
+                            .title("Enter the world seed!")
+                            .plugin(plugin)
+                            .onClose(player1 -> {
+                                new BukkitRunnable() {
+                                    @Override
+                                    public void run() {
+                                        open(player);
+                                    }
+                                }.runTaskLater(plugin, 1);
+                            })
+                            .onLeftInputClick((player1 -> {
+                                player1.openInventory(this.inventory);
+                            }))
+                            .onComplete((player1, text) -> {
+                                settings.setSeed(text);
+                                return AnvilGUI.Response.openInventory(this.inventory);
+                            })
+                            .open(player);
                     }
                 }
                 worldChange = true;
@@ -222,7 +222,7 @@ public class CreateGameMenu extends Menu {
     public void setMenuItems() {
 
         inventory.setItem(10, makeItem(switch (settings.getDifficulty()) {
-                    case EASY -> Material.GOLDEN_SWORD;
+                    case EASY -> Material.WOODEN_SWORD;
                     case NORMAL -> Material.IRON_SWORD;
                     case HARD -> Material.DIAMOND_SWORD;
                     default -> Material.RED_TULIP;
@@ -262,8 +262,8 @@ public class CreateGameMenu extends Menu {
                 ChatColor.AQUA + "Set Seed:",
                 ChatColor.GRAY + "" + settings.getSeed(),
                 "",
-                ChatColor.YELLOW + "Click to change!",
-                ChatColor.YELLOW + "Right-Click to randomize!"
+                ChatColor.YELLOW + "Click to randomize!",
+                ChatColor.YELLOW + "Right-Click to change!"
             ));
 
         if (worldChange) {

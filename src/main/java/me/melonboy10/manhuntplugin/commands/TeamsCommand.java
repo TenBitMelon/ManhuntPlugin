@@ -23,10 +23,12 @@ public class TeamsCommand{
     public void runner(@Sender Player player) {
         if (ManhuntGameManager.isPlayerInGame(player)) {
             ManhuntGame game = ManhuntGameManager.getGame(player);
-            if (game.getInvitedPlayers().contains(player)) {
-                game.getTeamTextMenu().playerJoinTeam(player, ManhuntGame.Team.RUNNER);
-            } else {
-                MessageUtils.sendError(player, "You are not invited!");
+            if (game.getState().equals(ManhuntGame.GameState.GENERATING)) {
+                if (game.getInvitedPlayers().contains(player)) {
+                    game.getTeamTextMenu().playerJoinTeam(player, ManhuntGame.Team.RUNNER);
+                } else {
+                    MessageUtils.sendError(player, "You are not invited!");
+                }
             }
         } else {
             MessageUtils.sendError(player, "You are not in a game!");
@@ -37,10 +39,12 @@ public class TeamsCommand{
     public void hunter(@Sender Player player) {
         if (ManhuntGameManager.isPlayerInGame(player)) {
             ManhuntGame game = ManhuntGameManager.getGame(player);
-            if (game.getInvitedPlayers().contains(player)) {
-                game.getTeamTextMenu().playerJoinTeam(player, ManhuntGame.Team.HUNTER);
-            } else {
-                MessageUtils.sendError(player, "You are not invited!");
+            if (game.getState().equals(ManhuntGame.GameState.GENERATING)) {
+                if (game.getInvitedPlayers().contains(player)) {
+                    game.getTeamTextMenu().playerJoinTeam(player, ManhuntGame.Team.HUNTER);
+                } else {
+                    MessageUtils.sendError(player, "You are not invited!");
+                }
             }
         } else {
             MessageUtils.sendError(player, "You are not in a game!");
@@ -51,10 +55,12 @@ public class TeamsCommand{
     public void spectator(@Sender Player player) {
         if (ManhuntGameManager.isPlayerInGame(player)) {
             ManhuntGame game = ManhuntGameManager.getGame(player);
-            if (game.getInvitedPlayers().contains(player)) {
-                game.getTeamTextMenu().playerJoinTeam(player, ManhuntGame.Team.SPECTATOR);
-            } else {
-                MessageUtils.sendError(player, "You are not invited!");
+            if (game.getState().equals(ManhuntGame.GameState.GENERATING)) {
+                if (game.getInvitedPlayers().contains(player)) {
+                    game.getTeamTextMenu().playerJoinTeam(player, ManhuntGame.Team.SPECTATOR);
+                } else {
+                    MessageUtils.sendError(player, "You are not invited!");
+                }
             }
         } else {
             MessageUtils.sendError(player, "You are not in a game!");

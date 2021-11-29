@@ -7,11 +7,13 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MinecraftFont;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class MessageUtils {
 
-    private static final int length = 235;
+    private static final int MAX_LENGTH = 235;
     //✇✆♹♸♿♾♽♼♻♺
     private static final String regex = "[⚠⎘♽☒☑⛏⚔⧈♻🛡_]";
 
@@ -38,7 +40,7 @@ public class MessageUtils {
     public static void sendFormattedMessage(Player player, TextComponent line) {
         int width = MinecraftFont.Font.getWidth(ChatColor.stripColor(line.toPlainText())
             .replaceAll(regex, "...."));
-        if (width > length) {
+        if (width > MAX_LENGTH) {
             player.spigot().sendMessage(
                     new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
                             .append("|   ").color(ChatColor.YELLOW.asBungee())
@@ -50,45 +52,33 @@ public class MessageUtils {
                     new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
                             .append("|   ").color(ChatColor.YELLOW.asBungee())
                             .append(line)
-                            .append(" ".repeat((length - width) / 4))
-                            .append(".".repeat((length - width) % 4)).color(ChatColor.DARK_GRAY.asBungee())
+                            .append(" ".repeat((MAX_LENGTH - width) / 4))
+                            .append(".".repeat((MAX_LENGTH - width) % 4)).color(ChatColor.DARK_GRAY.asBungee())
                             .append("|").color(ChatColor.YELLOW.asBungee())
                             .create());
         }
     }
 
-    public static void sendWrappedMessage(Player player, BaseComponent[] line) {
-        sendWrappedMessage(player, flattenComponents(line));
-    }
-
-    public static void sendWrappedMessage(Player player, TextComponent line) {
-        int width = MinecraftFont.Font.getWidth(ChatColor.stripColor(line.toPlainText())
-            .replaceAll(regex, "...."));
-        if (width > length) {
-            String[] split = line.getText().split(" ");
-            String[] segments = split;
-            String shrunkString = "";
-            while (width > length) {
-                segments = Arrays.copyOf(segments, segments.length - 1);
-                StringBuilder builder = new StringBuilder();
-                for (String segment : segments) {
-                    builder.append(segment);
-                }
-                shrunkString = builder.toString();
-                System.out.println(shrunkString);
-                width = MinecraftFont.Font.getWidth(ChatColor.stripColor(shrunkString.replaceAll(regex, ".")));
+    public static void sendWrappedMessage(Player player, ArrayList<TextComponent> lines) {
+        StringBuilder lineBuilder = new StringBuilder();
+        int totalWidth = 0;
+        for (TextComponent line : lines) {
+            int width = MinecraftFont.Font.getWidth(line.toPlainText().replaceAll(regex, "...."));
+            if (totalWidth + width < MAX_LENGTH) {
+                lineBuilder.append(line);
+                totalWidth += width;
+            } else {
+                sendFormattedMessage(player, new TextComponent(lineBuilder.toString()));
+                lineBuilder = new StringBuilder();
+                totalWidth = 0;
             }
-            sendFormattedMessage(player, new TextComponent(shrunkString));
-            StringBuilder builder = new StringBuilder();
-            for (int i = segments.length; i < split.length; i++) {
-                builder.append(split[i]);
-            }
-            sendWrappedMessage(player, new TextComponent(builder.toString()));
-        } else {
-            sendFormattedMessage(player, line);
         }
     }
 
+    /**
+     * sends a wrapped empty string
+     * @param player
+     */
     public static void sendBlankLine(Player player) {
         sendFormattedMessage(player, new TextComponent(""));
     }
@@ -101,6 +91,12 @@ public class MessageUtils {
         return component;
     }
 
+    /**
+     * Sends a blank string to the player
+     * If looking for the line wiht bars use
+     * sendBLankLine()
+     * @param player
+     */
     public static void sendEmptyLine(Player player) {
         player.sendMessage("");
     }
@@ -138,12 +134,7 @@ public class MessageUtils {
             return this;
         }
 
-        public Builder wrapped(BaseComponent[] line) {
-            sendWrappedMessage(player, line);
-            return this;
-        }
-
-        public Builder wrapped(TextComponent line) {
+        public Builder wrapped(ArrayList<TextComponent> line) {
             sendWrappedMessage(player, line);
             return this;
         }

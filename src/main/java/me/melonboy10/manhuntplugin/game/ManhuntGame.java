@@ -21,6 +21,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,10 +39,11 @@ public class ManhuntGame {
     private GameState gameState = GameState.GENERATING;
     private final ManhuntGameSettings settings;
 
-    private World overworld;
-    private World nether;
-    private World end;
-    private int hunterCooldown;
+    private final World overworld;
+    private final World nether;
+    private final World end;
+    private final int hunterCooldown;
+    private int gameTime = 0;
     private final TeamSelectTextMenu teamTextMenu;
     private TeamSelectMenu teamMenu;
     private BukkitTask gameRunnable;
@@ -118,7 +120,7 @@ public class ManhuntGame {
                         .append("/leave")
                         .color(ChatColor.GOLD.asBungee())
                         .event(new HoverEvent(
-                            HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.GOLD + "/leave")
+                            HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.GOLD + "Click to leave!")
                         ))
                         .event(new ClickEvent(
                             ClickEvent.Action.SUGGEST_COMMAND, "/leave"
@@ -134,14 +136,15 @@ public class ManhuntGame {
             );
             MessageUtils.sendFormattedMessage(player, new ComponentBuilder(ChatColor.GOLD + "/join " + this.hashCode())
                 .event(new HoverEvent(
-                    HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.GOLD + "/join " + this.hashCode())
+                    HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.GOLD + "Click to join " + this.hashCode() + "!")
                 ))
                 .event(new ClickEvent(
                     ClickEvent.Action.SUGGEST_COMMAND, "/join " + this.hashCode()
                 ))
                 .create()
             );
-            player.sendMessage(ChatColor.YELLOW + "+-----------------------------------------+");
+            MessageUtils.sendBlankLine(player);
+            MessageUtils.sendLineBreak(player);
         }
     }
 
@@ -152,31 +155,25 @@ public class ManhuntGame {
      * @param player Player joining
      */
     public void playerAcceptInvite(Player player) {
-        if (!invitedPlayers.contains(player)) {
-            MessageUtils.sendError(player, "You have not been invited!");
-            return;
-        }
         if (ManhuntGameManager.isPlayerInGame(player)) {
             MessageUtils.sendError(player, "You are already in a game!");
-            return;
-        }
-        if (gameState.equals(GameState.GAME_OVER)) {
+        } else if (gameState.equals(GameState.GAME_OVER)) {
             MessageUtils.sendError(player, "This game is over!");
-            return;
-        }
-        if (gameState.equals(GameState.GENERATING)) {
-            teamTextMenu.playerAcceptInvite(player);
-            ManhuntGameManager.playerJoinGame(player, this);
-        } else if (settings.getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)) {
-            players.put(player, Team.SPECTATOR);
-            teleportIntoGame(player);
-            ManhuntGameManager.playerJoinGame(player, this);
         } else {
-            if (quitPlayerTimer.containsKey(player)) {
+            if (gameState.equals(GameState.GENERATING)) {
+                teamTextMenu.playerAcceptInvite(player);
+                ManhuntGameManager.playerJoinGame(player, this);
+            } else if (settings.getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)) {
+                players.put(player, Team.SPECTATOR);
                 teleportIntoGame(player);
                 ManhuntGameManager.playerJoinGame(player, this);
-            } else {
-                teamMenu.open(player);
+            } else if (invitedPlayers.contains(player)) {
+                if (quitPlayerTimer.containsKey(player)) {
+                    teleportIntoGame(player);
+                    ManhuntGameManager.playerJoinGame(player, this);
+                } else {
+                    teamMenu.open(player);
+                }
             }
         }
     }
@@ -216,41 +213,44 @@ public class ManhuntGame {
         gameRunnable = new BukkitRunnable() {
             @Override
             public void run() {
+                gameTime++;
                 players.forEach((player, team) -> {
                     if (team.equals(Team.HUNTER)) {
-                        System.out.println(player);
                         ItemStack compass = new ItemStack(Material.COMPASS);
-//                        CompassMeta itemMeta = (CompassMeta) compass.getItemMeta();
-//                        itemMeta.setLodestoneTracked(false);
-//                        Player trackedPlayer = getClosestPlayer(player.getLocation(), Team.RUNNER);
-//                        if (trackedPlayer != null) {
-//                            itemMeta.setLodestone(trackedPlayer.getLocation());
-//                        }
-//                        compass.setItemMeta(itemMeta);
-                        player.setCompassTarget(getClosestPlayer(player.getLocation(), Team.RUNNER).getLocation());
+                        Player compassLocation = getClosestPlayer(player.getLocation(), Team.RUNNER);
+                        if (compassLocation != null) {
+                            player.setCompassTarget(compassLocation.getLocation());
+                        }
+
                         if (!player.getInventory().contains(Material.COMPASS)) {
                             player.getInventory().addItem(compass);
                         }
+                    }
+                    if (gameTime < hunterCooldown) {
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.YELLOW + "Hunters released in " + (hunterCooldown - gameTime) + " seconds!"));
                     }
                 });
             }
         }.runTaskTimer(plugin, 0, 20);
     }
 
+    @Nullable
     private Player getClosestPlayer(Location location, Team team) {
         Player closest = null;
         double distance = Double.MAX_VALUE;
-        for (Map.Entry<Player, Team> entry : players.entrySet()) {
-            Player player = entry.getKey();
-            Team team1 = entry.getValue();
-            if (team1.equals(team) && !player.getGameMode().equals(GameMode.SPECTATOR)) {
-                double distance1 = location.distanceSquared(player.getLocation());
-                if (distance1 < distance) {
-                    closest = player;
-                    distance = distance1;
+        try {
+            for (Map.Entry<Player, Team> entry : players.entrySet()) {
+                Player player = entry.getKey();
+                Team team1 = entry.getValue();
+                if (team1.equals(team) && !player.getGameMode().equals(GameMode.SPECTATOR)) {
+                    double distance1 = location.distanceSquared(player.getLocation());
+                    if (distance1 < distance) {
+                        closest = player;
+                        distance = distance1;
+                    }
                 }
             }
-        }
+        } catch (Exception ignored) {}
         return closest;
     }
 
@@ -356,16 +356,16 @@ public class ManhuntGame {
         });
 
         switch (team) {
-            case RUNNER -> players.forEach((player, team1) -> player.sendTitle((team1.equals(Team.RUNNER) ? ChatColor.GOLD + "YOU WIN" : ""), ChatColor.GREEN + "Runners Win"));
-            case HUNTER -> players.forEach((player, team1) -> player.sendTitle((team1.equals(Team.HUNTER) ? ChatColor.GOLD + "YOU WIN" : ""), ChatColor.RED + "Hunters Win"));
-            case UNKNOWN -> players.forEach((player, team1) -> player.sendTitle("", ChatColor.GRAY + "Tie"));
+            case RUNNER -> players.forEach((player, team1) -> player.sendTitle((team1.equals(Team.RUNNER) ? ChatColor.GOLD + "YOU WIN" : ""), ChatColor.GREEN + "Runners Win", 0, 80, 0));
+            case HUNTER -> players.forEach((player, team1) -> player.sendTitle((team1.equals(Team.HUNTER) ? ChatColor.GOLD + "YOU WIN" : ""), ChatColor.RED + "Hunters Win", 0, 80, 0));
+            case UNKNOWN -> players.forEach((player, team1) -> player.sendTitle("", ChatColor.GRAY + "Tie", 0, 80, 0));
         }
 
         new BukkitRunnable() {
             int timeLeft = 30;
             @Override
             public void run() {
-                players.forEach((player, team1) -> player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("Teleporting back in " + timeLeft)));
+                players.forEach((player, team1) -> player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("Teleporting back in " + timeLeft + ". Use /leave to leave early.")));
                 timeLeft--;
 
                 if (timeLeft < 0) {

@@ -78,6 +78,7 @@ public final class ManhuntPlugin extends JavaPlugin {
         this.getServer().getPluginManager().registerEvents(new PlayerLeaveListener(), this);
         this.getServer().getPluginManager().registerEvents(new JoinServerListener(), this);
         this.getServer().getPluginManager().registerEvents(new DeathListener(), this);
+        this.getServer().getPluginManager().registerEvents(new ChatListener(), this);
     }
 
     private void setupFiles() {

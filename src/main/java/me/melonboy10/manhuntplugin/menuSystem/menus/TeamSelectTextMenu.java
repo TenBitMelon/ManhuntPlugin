@@ -2,6 +2,7 @@ package me.melonboy10.manhuntplugin.menuSystem.menus;
 
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.game.ManhuntGame;
+import me.melonboy10.manhuntplugin.game.ManhuntGameSettings;
 import me.melonboy10.manhuntplugin.utils.MessageUtils;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.*;
@@ -27,6 +28,7 @@ public class TeamSelectTextMenu {
     private final String serializedMap;
     private int countDown = -1;
     private BukkitTask runnable;
+    private long timeCreated = System.currentTimeMillis();
 
     /**
      * This Object should be nulled once the game starts
@@ -133,7 +135,7 @@ public class TeamSelectTextMenu {
                     .append("   |").color(ChatColor.DARK_GRAY)
                     .append(readyPlayers.contains(player) ? ChatColor.GREEN + "   ☑   ": ChatColor.RED + "   ☒   ")
                     .event(new HoverEvent(
-                            HoverEvent.Action.SHOW_TEXT, new Text(readyPlayers.contains(player) ? ChatColor.GREEN + "Ready" : ChatColor.RED + "Unready")
+                            HoverEvent.Action.SHOW_TEXT, new Text(readyPlayers.contains(player) ? ChatColor.RED + "Click to Unready!" : ChatColor.GREEN + "Click to Ready!")
                     ))
                     .event(new ClickEvent(
                             ClickEvent.Action.RUN_COMMAND, "/ready"
@@ -141,12 +143,11 @@ public class TeamSelectTextMenu {
                     .create()
             );
             if ( countDown > 0) {
-                System.out.println("send ttile");
-                player.sendTitle("", ChatColor.GREEN + "" + countDown);
+                player.sendTitle("", ChatColor.GREEN + ">" + countDown + "<", 0, 20, 0);
             }
             MessageUtils.sendBlankLine(player);
             MessageUtils.sendWrappedMessage(player,
-                new TextComponent(getPlayerList())
+                getPlayerList()
             );
             MessageUtils.sendBlankLine(player);
             MessageUtils.sendFormattedMessage(player, new ComponentBuilder()
@@ -156,7 +157,7 @@ public class TeamSelectTextMenu {
                         ClickEvent.Action.RUN_COMMAND, "/teams runner"
                     ))
                     .event(new HoverEvent(
-                        HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.GREEN + "Join Runners")
+                        HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.GREEN + "Click to join the Runners!")
                     ))
                 .append(" : ")
                     .color(DARK_GRAY.asBungee())
@@ -168,7 +169,7 @@ public class TeamSelectTextMenu {
                         ClickEvent.Action.RUN_COMMAND, "/teams hunter"
                     ))
                     .event(new HoverEvent(
-                        HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.RED + "Join Hunters")
+                        HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.RED + "Click to join the Hunters!")
                     ))
                 .append(" : ")
                     .color(DARK_GRAY.asBungee())
@@ -180,7 +181,7 @@ public class TeamSelectTextMenu {
                         ClickEvent.Action.RUN_COMMAND, "/teams spectator"
                     ))
                     .event(new HoverEvent(
-                        HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.GRAY + "Join Spectators")
+                        HoverEvent.Action.SHOW_TEXT, new Text(ChatColor.GRAY + "Click to join the Spectators!")
                     ))
                 .append(" : ")
                     .color(DARK_GRAY.asBungee())
@@ -224,12 +225,14 @@ public class TeamSelectTextMenu {
         }.runTaskTimer(ManhuntPlugin.plugin, 0, 20);
     }
 
-    private String getPlayerList() {
+    private ArrayList<TextComponent> getPlayerList() {
+        ArrayList<TextComponent> returnList = new ArrayList<>();
+
         Set<Player> tempPlayers = new LinkedHashSet<>();
         tempPlayers.addAll(players.keySet());
         tempPlayers.addAll(invitedPlayers());
-        StringBuilder builder = new StringBuilder();
         tempPlayers.forEach((player -> {
+            StringBuilder builder = new StringBuilder();
             boolean invitee = false;
             ManhuntGame.Team team = players.getOrDefault(player, ManhuntGame.Team.UNKNOWN);
             switch (team) {
@@ -248,13 +251,18 @@ public class TeamSelectTextMenu {
                     builder.append(ChatColor.DARK_GRAY + " : " + ChatColor.RED + "☒ ");
                 }
             }
+
+            returnList.add(new TextComponent(builder.toString()));
         }));
-        return builder.toString();
+        return returnList;
     }
 
     public void playerAcceptInvite(Player... addedPlayers) {
         for (Player player : addedPlayers) {
             players.put(player, ManhuntGame.Team.SPECTATOR);
+            if (!invitedPlayers().contains(player) && game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)) {
+                readyPlayers.add(player);
+            }
         }
         update();
     }
@@ -265,6 +273,10 @@ public class TeamSelectTextMenu {
 
     public ManhuntGame.Team getTeam(Player player) {
         return players.get(player);
+    }
+
+    public long getTimeInMenu() {
+        return System.currentTimeMillis() - timeCreated;
     }
 
     /**
