@@ -107,6 +107,11 @@ public final class ManhuntPlugin extends JavaPlugin {
             player.setBedSpawnLocation(ManhuntPlugin.hubWorld.getSpawnLocation().clone().add(0.5, 0, 0.5), true);
             player.setGameMode(GameMode.ADVENTURE);
             player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 1000000, 100, true, false));
+            player.setAllowFlight(false);
+            player.setLevel(0);
+            player.setExp(0);
+            player.setCompassTarget(hubWorld.getSpawnLocation());
+//            player.
 
             player.getInventory().clear();
             player.getInventory().setItem(0, currentGamesItem);
