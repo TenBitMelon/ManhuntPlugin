@@ -4,6 +4,7 @@ import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.game.ManhuntGame;
 import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -21,11 +22,15 @@ public class DeathListener implements Listener {
             ManhuntGame game = ManhuntGameManager.getGame(event.getEntity());
             if (game != null) {
                 event.getDrops().removeIf(itemStack -> itemStack.getType().equals(Material.COMPASS));
+                Location deathLocation = event.getEntity().getLocation();
                 new BukkitRunnable() {
                     @Override
                     public void run() {
                         event.getEntity().spigot().respawn();
                         game.playerDie(event.getEntity());
+                        if (game.getTeam(event.getEntity()).equals(ManhuntGame.Team.RUNNER)) {
+                            event.getEntity().teleport(deathLocation);
+                        }
                     }
                 }.runTaskLater(ManhuntPlugin.plugin, 1);
             }

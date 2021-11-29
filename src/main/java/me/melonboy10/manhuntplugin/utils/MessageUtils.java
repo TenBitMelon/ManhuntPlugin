@@ -13,7 +13,7 @@ public class MessageUtils {
 
     private static final int length = 235;
     //✇✆♹♸♿♾♽♼♻♺
-    private static final String regex = "[⎘♽☒☑⛏⚔⧈♻🛡]";
+    private static final String regex = "[⚠⎘♽☒☑⛏⚔⧈♻🛡_]";
 
     public static void sendError(Player player, String error) {
         player.sendMessage(ChatColor.RED + "⚠ " + error + ChatColor.RED + " ⚠");
@@ -75,7 +75,8 @@ public class MessageUtils {
                     builder.append(segment);
                 }
                 shrunkString = builder.toString();
-                width = MinecraftFont.Font.getWidth(ChatColor.stripColor(shrunkString));
+                System.out.println(shrunkString);
+                width = MinecraftFont.Font.getWidth(ChatColor.stripColor(shrunkString.replaceAll(regex, ".")));
             }
             sendFormattedMessage(player, new TextComponent(shrunkString));
             StringBuilder builder = new StringBuilder();

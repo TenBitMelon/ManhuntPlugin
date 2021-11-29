@@ -218,22 +218,17 @@ public class ManhuntGame {
             public void run() {
                 players.forEach((player, team) -> {
                     if (team.equals(Team.HUNTER)) {
+                        System.out.println(player);
                         ItemStack compass = new ItemStack(Material.COMPASS);
-                        CompassMeta itemMeta = (CompassMeta) compass.getItemMeta();
-                        itemMeta.setLodestoneTracked(false);
-                        Player trackedPlayer = getClosestPlayer(player.getLocation(), Team.RUNNER);
-                        if (trackedPlayer != null) {
-                            itemMeta.setLodestone(trackedPlayer.getLocation());
-                        }
-                        compass.setItemMeta(itemMeta);
-
-                        if (player.getInventory().getItemInMainHand().getType().equals(Material.COMPASS)) {
-                            player.getInventory().setItemInMainHand(compass);
-                        } else if (player.getInventory().getItemInOffHand().getType().equals(Material.COMPASS)) {
-                            player.getInventory().setItemInOffHand(compass);
-                        } else if (player.getItemOnCursor().getType().equals(Material.COMPASS)) {
-
-                        } else if (!player.getInventory().contains(Material.COMPASS)) {
+//                        CompassMeta itemMeta = (CompassMeta) compass.getItemMeta();
+//                        itemMeta.setLodestoneTracked(false);
+//                        Player trackedPlayer = getClosestPlayer(player.getLocation(), Team.RUNNER);
+//                        if (trackedPlayer != null) {
+//                            itemMeta.setLodestone(trackedPlayer.getLocation());
+//                        }
+//                        compass.setItemMeta(itemMeta);
+                        player.setCompassTarget(getClosestPlayer(player.getLocation(), Team.RUNNER).getLocation());
+                        if (!player.getInventory().contains(Material.COMPASS)) {
                             player.getInventory().addItem(compass);
                         }
                     }
@@ -243,18 +238,20 @@ public class ManhuntGame {
     }
 
     private Player getClosestPlayer(Location location, Team team) {
-        final Player[] closest = new Player[1];
-        final Double[] distance = {Double.MAX_VALUE};
-        players.forEach((player, team1) -> {
+        Player closest = null;
+        double distance = Double.MAX_VALUE;
+        for (Map.Entry<Player, Team> entry : players.entrySet()) {
+            Player player = entry.getKey();
+            Team team1 = entry.getValue();
             if (team1.equals(team) && !player.getGameMode().equals(GameMode.SPECTATOR)) {
                 double distance1 = location.distanceSquared(player.getLocation());
-                if (distance1 < distance[0]) {
-                    closest[0] = player;
-                    distance[0] = distance1;
+                if (distance1 < distance) {
+                    closest = player;
+                    distance = distance1;
                 }
             }
-        });
-        return closest[0];
+        }
+        return closest;
     }
 
     /**
@@ -319,9 +316,9 @@ public class ManhuntGame {
                 }
             }.runTaskLater(plugin, 5 * 60 * 20));
 
-            players.remove(player);
-            players.forEach((player1, team1) -> player1.sendMessage(ChatColor.RED + player1.getName() + " has left the game! They have 5 minutes to rejoin!"));
+            players.forEach((player1, team1) -> player1.sendMessage(ChatColor.RED + player.getName() + " has left the game! They have 5 minutes to rejoin!"));
         }
+        players.remove(player);
         ManhuntGameManager.playerLeaveGame(player);
         ManhuntPlugin.sendPlayertoHub(player);
     }
@@ -377,6 +374,7 @@ public class ManhuntGame {
                         ManhuntPlugin.sendPlayertoHub(player);
                     });
                     cancel();
+                    shutDown();
                 }
             }
         }.runTaskTimer(plugin, 0, 20);
@@ -466,24 +464,23 @@ public class ManhuntGame {
 
     public void shutDown() {
         //Delete folders\
-        try {
-            Bukkit.unloadWorld(overworld, false);
-            Bukkit.unloadWorld(nether, false);
-            Bukkit.unloadWorld(end, false);
-            deleteDirectoryStream(overworld.getWorldFolder().toPath());
-            deleteDirectoryStream(nether.getWorldFolder().toPath());
-            deleteDirectoryStream(end.getWorldFolder().toPath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Bukkit.unloadWorld(overworld, false);
+        Bukkit.unloadWorld(nether, false);
+        Bukkit.unloadWorld(end, false);
+        deleteDirectory(overworld.getWorldFolder());
+        deleteDirectory(nether.getWorldFolder());
+        deleteDirectory(end.getWorldFolder());
         gameRunnable.cancel();
     }
 
-    void deleteDirectoryStream(Path path) throws IOException {
-        Files.walk(path)
-            .sorted(Comparator.reverseOrder())
-            .map(Path::toFile)
-            .forEach(File::delete);
+    private void deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file);
+            }
+        }
+        directoryToBeDeleted.delete();
     }
 
 
