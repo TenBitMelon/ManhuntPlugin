@@ -4,6 +4,7 @@ import com.jonahseguin.drink.annotation.Command;
 import com.jonahseguin.drink.annotation.Sender;
 import me.melonboy10.manhuntplugin.game.ManhuntGame;
 import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
+import me.melonboy10.manhuntplugin.game.ManhuntGameSettings;
 import me.melonboy10.manhuntplugin.utils.MessageUtils;
 import org.bukkit.entity.Player;
 
@@ -14,7 +15,7 @@ public class JoinCommand {
         if (!ManhuntGameManager.isPlayerInGame(sender)) {
             ManhuntGame game = ManhuntGameManager.getGame(gameID);
             if (game != null) {
-                if (game.getInvitedPlayers().contains(sender)) {
+                if (game.getInvitedPlayers().contains(sender) && game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.PRIVATE)) {
                     game.playerAcceptInvite(sender.getPlayer());
                 } else {
                     MessageUtils.sendError(sender, "You are not invited!");

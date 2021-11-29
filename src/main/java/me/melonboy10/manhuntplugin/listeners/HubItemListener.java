@@ -4,6 +4,7 @@ import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.menuSystem.menus.CreateGameMenu;
 import me.melonboy10.manhuntplugin.menuSystem.menus.GameHistoryMenu;
 import me.melonboy10.manhuntplugin.menuSystem.menus.GamesListMenu;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -57,7 +58,7 @@ public class HubItemListener implements Listener {
             switch (item.getType()) {
                 case COMPASS -> new GamesListMenu().open(player);
                 case WRITTEN_BOOK -> new GameHistoryMenu().open(player);
-                case GOLDEN_SWORD -> new CreateGameMenu(" ", player).open(player);
+                case GOLDEN_SWORD -> Bukkit.dispatchCommand(player, "create");
             }
         }
     }
