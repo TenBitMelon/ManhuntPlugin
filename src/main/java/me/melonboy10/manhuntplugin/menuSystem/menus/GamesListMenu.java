@@ -6,12 +6,17 @@ import me.melonboy10.manhuntplugin.game.ManhuntGameSettings;
 import me.melonboy10.manhuntplugin.menuSystem.PaginatedMenu;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.persistence.PersistentDataType;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GamesListMenu extends PaginatedMenu {
 
@@ -30,6 +35,10 @@ public class GamesListMenu extends PaginatedMenu {
         if(event.getSlot() == 49) {
             event.getWhoClicked().closeInventory();
         }
+        if (event.getCurrentItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "game-id"), PersistentDataType.INTEGER)) {
+            int gameId = event.getCurrentItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "game-id"), PersistentDataType.INTEGER);
+            ((Player) event.getWhoClicked()).performCommand("join " + gameId);
+        }
     }
 
     @Override
@@ -47,18 +56,31 @@ public class GamesListMenu extends PaginatedMenu {
         //sort by public then spec only
         //sort by game time
 
-        List<ManhuntGame> games = ManhuntGameManager.getGames();
-        List<ManhuntGame> publicGames = games.stream().filter(manhuntGame -> manhuntGame.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.PRIVATE)).toList();
-        List<ManhuntGame> specGames = games.stream().filter(manhuntGame -> manhuntGame.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)).toList();
+        List<ManhuntGame> games = ManhuntGameManager.getGames().stream()
+            .filter(manhuntGame -> !manhuntGame.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.PRIVATE))
+            .filter(manhuntGame -> !manhuntGame.getState().equals(ManhuntGame.GameState.GAME_OVER))
+            .sorted(Comparator.comparing(game -> game.getSettings().getPrivacy()))
+            .collect(Collectors.toList());
 
-        for (int i = 0; i < publicGames.size() && i < maxItemsPerPage; i++) {
-            ManhuntGame game = publicGames.get(i);
-            inventory.addItem(makeItem(switch (game.getState()) {
-                case GENERATING -> Material.STONE;
-                case HUNTER_COOLDOWN -> Material.DIRT;
-                case PLAYING -> Material.GRASS_BLOCK;
-                case GAME_OVER -> Material.BARRIER;
-            }, ChatColor.YELLOW + "Game #" + game.hashCode(),
+        for (int i = 0; i < games.size() && i < maxItemsPerPage; i++) {
+            ManhuntGame game = games.get(i);
+            inventory.addItem(makeItem(
+                (game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.PUBLIC) ?
+                    switch (game.getState()) {
+                        case GENERATING -> Material.STONE;
+                        case HUNTER_COOLDOWN -> Material.DIRT;
+                        case PLAYING -> Material.GRASS_BLOCK;
+                        case GAME_OVER -> Material.BARRIER;
+                    } :
+                    switch (game.getState()) {
+                        case GENERATING -> Material.FIRE_CHARGE;
+                        case HUNTER_COOLDOWN -> Material.SLIME_BALL;
+                        case PLAYING -> Material.ENDER_EYE;
+                        case GAME_OVER -> Material.BARRIER;
+                    }
+                ),
+                ChatColor.YELLOW + "Game #" + game.hashCode(),
+                1, "game-id", game.hashCode(),
                 ChatColor.DARK_GRAY + "Manhunt Game",
                 "",
                 ChatColor.AQUA + "Game State:",

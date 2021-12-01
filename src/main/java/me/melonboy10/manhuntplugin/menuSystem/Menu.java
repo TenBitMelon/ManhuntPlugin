@@ -77,8 +77,22 @@ public abstract class Menu implements InventoryHolder {
         itemMeta.setDisplayName(ChatColor.RESET + name);
 
         itemMeta.setLore(Arrays.asList(lore));
-
         itemMeta.getPersistentDataContainer().set(new NamespacedKey(ManhuntPlugin.getPlugin(ManhuntPlugin.class), dataKey), PersistentDataType.STRING , data);
+        item.setItemMeta(itemMeta);
+
+        return item;
+    }
+
+    public static ItemStack makeItem(Material material, String name, int amount, String dataKey, int data, String... lore) {
+
+        ItemStack item = new ItemStack(material);
+        item.setAmount(amount);
+        ItemMeta itemMeta = item.getItemMeta();
+        itemMeta.setDisplayName(ChatColor.RESET + name);
+
+        itemMeta.setLore(Arrays.asList(lore));
+
+        itemMeta.getPersistentDataContainer().set(new NamespacedKey(ManhuntPlugin.getPlugin(ManhuntPlugin.class), dataKey), PersistentDataType.INTEGER , data);
 
         item.setItemMeta(itemMeta);
 

@@ -1,7 +1,6 @@
 package me.melonboy10.manhuntplugin.listeners;
 
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
-import me.melonboy10.manhuntplugin.menuSystem.menus.CreateGameMenu;
 import me.melonboy10.manhuntplugin.menuSystem.menus.GameHistoryMenu;
 import me.melonboy10.manhuntplugin.menuSystem.menus.GamesListMenu;
 import org.bukkit.Bukkit;

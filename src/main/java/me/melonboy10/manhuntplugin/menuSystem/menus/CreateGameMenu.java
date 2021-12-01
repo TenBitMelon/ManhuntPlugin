@@ -7,6 +7,7 @@ import me.melonboy10.manhuntplugin.game.ManhuntGameSettings;
 import me.melonboy10.manhuntplugin.maps.ImageMapRenderer;
 import me.melonboy10.manhuntplugin.maps.MapListener;
 import me.melonboy10.manhuntplugin.menuSystem.Menu;
+import me.melonboy10.manhuntplugin.utils.PlayerListCollector;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -65,7 +66,7 @@ public class CreateGameMenu extends Menu {
     @Override
     public void clickEvent(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
-        if (!player.equals(creator)) return;
+        if (!player.equals(creator)) return; //was planning on letting other people view the creation, but that is now scrapped
         switch (event.getSlot()) {
 //            Difficulty
             case 10 -> {
@@ -197,7 +198,9 @@ public class CreateGameMenu extends Menu {
                             .open(player);
                     }
                     case RIGHT, SHIFT_RIGHT -> {
-                        invitedPlayers.removeLast();
+                        if (!invitedPlayers.isEmpty()) {
+                            invitedPlayers.removeLast();
+                        }
                         setMenuItems();
                     }
                 }
@@ -231,10 +234,10 @@ public class CreateGameMenu extends Menu {
                 ChatColor.DARK_GRAY + "Gameplay",
                 "",
                 ChatColor.AQUA + "Selected Difficulty:",
-                ChatColor.GRAY + " - " + (settings.getDifficulty() == Difficulty.EASY ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Easy",
-                ChatColor.GRAY + " - " + (settings.getDifficulty() == Difficulty.NORMAL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Normal",
-                ChatColor.GRAY + " - " + (settings.getDifficulty() == Difficulty.HARD ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Hard",
-                ChatColor.GRAY + " - " + (settings.getDifficulty() == Difficulty.PEACEFUL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Peaceful",
+                ChatColor.DARK_GRAY + " - " + (settings.getDifficulty() == Difficulty.EASY ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Easy",
+                ChatColor.DARK_GRAY + " - " + (settings.getDifficulty() == Difficulty.NORMAL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Normal",
+                ChatColor.DARK_GRAY + " - " + (settings.getDifficulty() == Difficulty.HARD ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Hard",
+                ChatColor.DARK_GRAY + " - " + (settings.getDifficulty() == Difficulty.PEACEFUL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Peaceful",
                 "",
                 ChatColor.YELLOW + "Click to toggle!"
             ));
@@ -248,9 +251,9 @@ public class CreateGameMenu extends Menu {
                 ChatColor.DARK_GRAY + "Generation",
                 "",
                 ChatColor.AQUA + "Selected World Type:",
-                ChatColor.GRAY + " - " + (settings.getWorldType() == WorldType.NORMAL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Default",
-                ChatColor.GRAY + " - " + (settings.getWorldType() == WorldType.LARGE_BIOMES ?  ChatColor.DARK_AQUA : ChatColor.GRAY) + "Large Biomes",
-                ChatColor.GRAY + " - " + (settings.getWorldType() == WorldType.AMPLIFIED ?  ChatColor.DARK_AQUA : ChatColor.GRAY) + "Amplified",
+                ChatColor.DARK_GRAY + " - " + (settings.getWorldType() == WorldType.NORMAL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Default",
+                ChatColor.DARK_GRAY + " - " + (settings.getWorldType() == WorldType.LARGE_BIOMES ?  ChatColor.DARK_AQUA : ChatColor.GRAY) + "Large Biomes",
+                ChatColor.DARK_GRAY + " - " + (settings.getWorldType() == WorldType.AMPLIFIED ?  ChatColor.DARK_AQUA : ChatColor.GRAY) + "Amplified",
                 "",
                 ChatColor.YELLOW + "Click to toggle!"
         ));
@@ -279,9 +282,9 @@ public class CreateGameMenu extends Menu {
                 ChatColor.DARK_GRAY + "Gameplay",
                 "",
                 ChatColor.AQUA + "Selected Privacy Setting:",
-                ChatColor.GRAY + " - " + (settings.getPrivacy() == Privacy.PRIVATE ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Private",
-                ChatColor.GRAY + " - " + (settings.getPrivacy() == Privacy.SPECTATOR_ONLY ?  ChatColor.DARK_AQUA : ChatColor.GRAY) + "Spectator Only",
-                ChatColor.GRAY + " - " + (settings.getPrivacy() == Privacy.PUBLIC ?  ChatColor.DARK_AQUA : ChatColor.GRAY) + "Public",
+                ChatColor.DARK_GRAY + " - " + (settings.getPrivacy() == Privacy.PRIVATE ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Private",
+                ChatColor.DARK_GRAY + " - " + (settings.getPrivacy() == Privacy.SPECTATOR_ONLY ?  ChatColor.DARK_AQUA : ChatColor.GRAY) + "Spectator Only",
+                ChatColor.DARK_GRAY + " - " + (settings.getPrivacy() == Privacy.PUBLIC ?  ChatColor.DARK_AQUA : ChatColor.GRAY) + "Public",
                 "",
                 ChatColor.YELLOW + "Click to toggle!"
             ));
@@ -298,26 +301,16 @@ public class CreateGameMenu extends Menu {
                 ChatColor.YELLOW + "Shift-Click to go faster!"
             ));
 
-        ItemStack inviteItem = makeItem(Material.NAME_TAG,
-                ChatColor.YELLOW + "Invite Players",
-                ChatColor.DARK_GRAY + "Gameplay",
-                "",
-                ChatColor.AQUA + "Invited Players:"
-        );
-        ItemMeta inviteItemMeta = inviteItem.getItemMeta();
-        List<String> lore = inviteItemMeta.getLore();
-        if (invitedPlayers.size() > 0) {
-            lore.addAll(invitedPlayers.stream().map(p -> ChatColor.GRAY + " - " + p.getName()).toList());
-        } else {
-            lore.add(ChatColor.GRAY + "No-one has been invited!");
-        }
-        lore.add("");
-        lore.add(ChatColor.YELLOW + "Click to add players!");
-        lore.add(ChatColor.YELLOW + "Right-Click to remove last player!");
-        inviteItemMeta.setLore(lore);
-        inviteItem.setItemMeta(inviteItemMeta);
-
-        inventory.setItem(16, inviteItem);
+        inventory.setItem(16, makeItem(Material.NAME_TAG,
+            ChatColor.YELLOW + "Invite Players",
+            ChatColor.DARK_GRAY + "Gameplay",
+            "",
+            ChatColor.AQUA + "Invited Players:",
+            (invitedPlayers.isEmpty() ? ChatColor.GRAY + "No-one has been invited!" : invitedPlayers.stream().collect(new PlayerListCollector())),
+            "",
+            ChatColor.YELLOW + "Click to add players!",
+            ChatColor.YELLOW + "Right-Click to remove last player!"
+        ));
 
         inventory.setItem(22, makeItem(Material.LIME_TERRACOTTA,
                 ChatColor.GREEN + "Create World",

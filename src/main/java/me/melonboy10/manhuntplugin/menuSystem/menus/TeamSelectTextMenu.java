@@ -146,9 +146,7 @@ public class TeamSelectTextMenu {
                 player.sendTitle("", ChatColor.GREEN + ">" + countDown + "<", 0, 20, 0);
             }
             MessageUtils.sendBlankLine(player);
-            MessageUtils.sendWrappedMessage(player,
-                getPlayerList()
-            );
+            MessageUtils.sendWrappedMessage(player, getPlayerList());
             MessageUtils.sendBlankLine(player);
             MessageUtils.sendFormattedMessage(player, new ComponentBuilder()
                 .append("Runner")
@@ -257,12 +255,10 @@ public class TeamSelectTextMenu {
         return returnList;
     }
 
-    public void playerAcceptInvite(Player... addedPlayers) {
-        for (Player player : addedPlayers) {
-            players.put(player, ManhuntGame.Team.SPECTATOR);
-            if (!invitedPlayers().contains(player) && game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)) {
-                readyPlayers.add(player);
-            }
+    public void playerAcceptInvite(Player player) {
+        players.put(player, ManhuntGame.Team.SPECTATOR);
+        if (!invitedPlayers().contains(player) && game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)) {
+            readyPlayers.add(player);
         }
         update();
     }
@@ -287,17 +283,36 @@ public class TeamSelectTextMenu {
      * @param team team the player is joining
      */
     public void playerJoinTeam(Player player, ManhuntGame.Team team) {
-        players.put(player, team);
+        if (game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.PRIVATE) || game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)) {
+            if (invitedPlayers().contains(player)) {
+                players.put(player, team);
+            }
+        } else {
+            players.put(player, team);
+        }
         update();
     }
 
     public void playerReady(Player player) {
-        if (readyPlayers.contains(player)) {
-            readyPlayers.remove(player);
+        if (game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)) {
+            if (invitedPlayers().contains(player)) {
+                if (readyPlayers.contains(player)) {
+                    readyPlayers.remove(player);
+                } else {
+                    readyPlayers.add(player);
+                }
+                update();
+            } else {
+                MessageUtils.sendError(player, "You are not invited!");
+            }
         } else {
-            readyPlayers.add(player);
+            if (readyPlayers.contains(player)) {
+                readyPlayers.remove(player);
+            } else {
+                readyPlayers.add(player);
+            }
+            update();
         }
-        update();
     }
 
     private boolean checkReady() {
