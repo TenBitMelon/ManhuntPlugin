@@ -1,6 +1,5 @@
 package me.melonboy10.manhuntplugin.game;
 
-import com.google.common.collect.HashBiMap;
 import me.melonboy10.manhuntplugin.ManhuntPlugin;
 import me.melonboy10.manhuntplugin.menuSystem.menus.TeamSelectMenu;
 import me.melonboy10.manhuntplugin.menuSystem.menus.TeamSelectTextMenu;
@@ -15,7 +14,6 @@ import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.CompassMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -23,19 +21,14 @@ import org.bukkit.scheduler.BukkitTask;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ManhuntGame {
 
     private static final ManhuntPlugin plugin = ManhuntPlugin.plugin;
 
-    public enum Team {RUNNER, HUNTER, SPECTATOR, UNKNOWN;}
-
-    public enum GameState {GENERATING, HUNTER_COOLDOWN, PLAYING, GAME_OVER;}
+    public enum Team {RUNNER, HUNTER, SPECTATOR, UNKNOWN}
+    public enum GameState {GENERATING, HUNTER_COOLDOWN, PLAYING, GAME_OVER}
     private GameState gameState = GameState.GENERATING;
     private final ManhuntGameSettings settings;
 
@@ -45,7 +38,7 @@ public class ManhuntGame {
     private final int hunterCooldown;
     private int gameTime = 0;
     private final TeamSelectTextMenu teamTextMenu;
-    private TeamSelectMenu teamMenu;
+    private final TeamSelectMenu teamMenu;
     private BukkitTask gameRunnable;
     private final ItemStack mapItem;
 
@@ -63,6 +56,7 @@ public class ManhuntGame {
         mapItem = item;
         this.creator = creator;
         teamTextMenu = new TeamSelectTextMenu(this);
+        teamMenu = new TeamSelectMenu(this);
 
         forceInvitePlayer(creator);
         playerAcceptInvite(creator);
@@ -150,7 +144,14 @@ public class ManhuntGame {
 
     /**
      * Called when a player accepts the invite
-     * Player cannot join if not invited
+     * Called only from the /join command
+     *
+     * PRIVATE:
+     *    Player cannot join if not invited
+     * SPECTATOR:
+     *    Player can only join as spectator
+     * PUBLIC:
+     *    Anyone can join
      *
      * @param player Player joining
      */
@@ -163,36 +164,19 @@ public class ManhuntGame {
             if (gameState.equals(GameState.GENERATING)) {
                 teamTextMenu.playerAcceptInvite(player);
                 ManhuntGameManager.playerJoinGame(player, this);
+            } else if (quitPlayerTimer.containsKey(player)) {
+                teleportIntoGame(player);
+                ManhuntGameManager.playerJoinGame(player, this);
+            } else if (settings.getPrivacy().equals(ManhuntGameSettings.Privacy.PUBLIC)) {
+                teamMenu.open(player);
             } else if (settings.getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)) {
                 players.put(player, Team.SPECTATOR);
                 teleportIntoGame(player);
                 ManhuntGameManager.playerJoinGame(player, this);
-            } else if (invitedPlayers.contains(player)) {
-                if (quitPlayerTimer.containsKey(player)) {
-                    teleportIntoGame(player);
-                    ManhuntGameManager.playerJoinGame(player, this);
-                } else {
-                    teamMenu.open(player);
-                }
+            } else if (invitedPlayers.contains(player) && settings.getPrivacy().equals(ManhuntGameSettings.Privacy.PRIVATE)) {
+                teamMenu.open(player);
             }
         }
-    }
-
-    /**
-     * Set Team called when /team in called
-     * check if in game
-     * check if already on that team
-     *
-     * need to make independant from menu
-     * menu can have selector and set when menu is done
-     * but this can be run when someone new joins
-     */
-    public void setTeams(HashBiMap<Player, ManhuntGame.Team> setPlayers) {
-        setPlayers.forEach((player, team) -> {
-            if (!ManhuntGameManager.isPlayerInGame(player, this) &&  invitedPlayers.contains(player)) {
-
-            }
-        });
     }
 
     /**
@@ -208,7 +192,7 @@ public class ManhuntGame {
         gameState = GameState.HUNTER_COOLDOWN;
         for (Player player : players.keySet()) {
             teleportIntoGame(player);
-            player.sendTitle("", "");
+            player.sendTitle("", "", 0, 1, 0);
         }
         gameRunnable = new BukkitRunnable() {
             @Override
@@ -259,42 +243,41 @@ public class ManhuntGame {
      *
      * @param player Player being teleported
      */
-    private void teleportIntoGame(Player player) {
-        if (!isWorldReady()) {
-            return;
-        }
-        if (players.containsKey(player) || quitPlayerTimer.containsKey(player)) {
-            player.teleport(overworld.getSpawnLocation());
-            player.setBedSpawnLocation(overworld.getSpawnLocation(), true);
-            player.getInventory().clear();
+    public void teleportIntoGame(Player player) {
+        if (isWorldReady()) {
+            if (players.containsKey(player) || quitPlayerTimer.containsKey(player)) {
+                player.teleport(overworld.getSpawnLocation());
+                player.setBedSpawnLocation(overworld.getSpawnLocation(), true);
+                player.getInventory().clear();
 
-            player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,hunterCooldown * 20 + 80, 250, true, false));
-            if (quitPlayerTimer.containsKey(player)) {
-                players.put(player, quitPlayerTeam.get(player));
-                player.getInventory().setContents(quitPlayerInventory.get(player).getContents());
-                player.teleport(quitPlayerLocation.get(player));
-                quitPlayerTimer.get(player).cancel();
-                quitPlayerTimer.remove(player);
-                quitPlayerTeam.remove(player);
-                quitPlayerLocation.remove(player);
-                quitPlayerInventory.remove(player);
-            }
-            if (gameState.equals(GameState.HUNTER_COOLDOWN) && getTeam(player).equals(Team.HUNTER)) {
-                player.addPotionEffects(
-                    List.of(new PotionEffect[]{
-                        new PotionEffect(PotionEffectType.BLINDNESS,    hunterCooldown * 20 + 20, 250, true, false),
-                        new PotionEffect(PotionEffectType.SLOW_DIGGING, hunterCooldown * 20 + 20, 250, true, false),
-                        new PotionEffect(PotionEffectType.SLOW,         hunterCooldown * 20 + 20, 250, true, false),
-                        new PotionEffect(PotionEffectType.JUMP,         hunterCooldown * 20 + 20, 250, true, false),
-                        new PotionEffect(PotionEffectType.WEAKNESS,     hunterCooldown * 20 + 20, 250, true, false)
-                    })
-                );
-            }
-            if (getTeam(player).equals(Team.SPECTATOR)) {
-                player.setGameMode(GameMode.SPECTATOR);
-            } else {
-                player.setGameMode(GameMode.SURVIVAL);
+                player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, hunterCooldown * 20 + 80, 250, true, false));
+                if (quitPlayerTimer.containsKey(player)) {
+                    players.put(player, quitPlayerTeam.get(player));
+                    player.getInventory().setContents(quitPlayerInventory.get(player).getContents());
+                    player.teleport(quitPlayerLocation.get(player));
+                    quitPlayerTimer.get(player).cancel();
+                    quitPlayerTimer.remove(player);
+                    quitPlayerTeam.remove(player);
+                    quitPlayerLocation.remove(player);
+                    quitPlayerInventory.remove(player);
+                }
+                if (gameState.equals(GameState.HUNTER_COOLDOWN) && getTeam(player).equals(Team.HUNTER)) {
+                    player.addPotionEffects(
+                        List.of(new PotionEffect[]{
+                            new PotionEffect(PotionEffectType.BLINDNESS, hunterCooldown * 20 + 20, 250, true, false),
+                            new PotionEffect(PotionEffectType.SLOW_DIGGING, hunterCooldown * 20 + 20, 250, true, false),
+                            new PotionEffect(PotionEffectType.SLOW, hunterCooldown * 20 + 20, 250, true, false),
+                            new PotionEffect(PotionEffectType.JUMP, hunterCooldown * 20 + 20, 250, true, false),
+                            new PotionEffect(PotionEffectType.WEAKNESS, hunterCooldown * 20 + 20, 250, true, false)
+                        })
+                    );
+                }
+                if (getTeam(player).equals(Team.SPECTATOR)) {
+                    player.setGameMode(GameMode.SPECTATOR);
+                } else {
+                    player.setGameMode(GameMode.SURVIVAL);
+                }
             }
         }
     }
@@ -398,6 +381,9 @@ public class ManhuntGame {
 
     public void broadcastMessage(String message) {
         players.forEach((player, team) -> player.sendMessage(message));
+    }
+
+    public void setTeam(Player player, Team runner) {
     }
 
 

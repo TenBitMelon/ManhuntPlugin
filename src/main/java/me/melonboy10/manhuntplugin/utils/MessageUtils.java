@@ -7,9 +7,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MinecraftFont;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class MessageUtils {
 
@@ -42,25 +40,25 @@ public class MessageUtils {
             .replaceAll(regex, "...."));
         if (width > MAX_LENGTH) {
             player.spigot().sendMessage(
-                    new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
-                            .append("|   ").color(ChatColor.YELLOW.asBungee())
-                            .append(line)
-                            .append("|").color(ChatColor.YELLOW.asBungee())
-                            .create());
+                new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
+                    .append("|   ").color(ChatColor.YELLOW.asBungee())
+                    .append(line)
+                    .append("|").color(ChatColor.YELLOW.asBungee())
+                    .create());
         } else {
             player.spigot().sendMessage(
-                    new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
-                            .append("|   ").color(ChatColor.YELLOW.asBungee())
-                            .append(line)
-                            .append(" ".repeat((MAX_LENGTH - width) / 4))
-                            .append(".".repeat((MAX_LENGTH - width) % 4)).color(ChatColor.DARK_GRAY.asBungee())
-                            .append("|").color(ChatColor.YELLOW.asBungee())
-                            .create());
+                new ComponentBuilder(".").color(ChatColor.DARK_GRAY.asBungee())
+                    .append("|   ").color(ChatColor.YELLOW.asBungee())
+                    .append(line)
+                    .append(" ".repeat((MAX_LENGTH - width) / 4))
+                    .append(".".repeat((MAX_LENGTH - width) % 4)).color(ChatColor.DARK_GRAY.asBungee())
+                    .append("|").color(ChatColor.YELLOW.asBungee())
+                    .create());
         }
     }
 
     public static void sendWrappedMessage(Player player, ArrayList<TextComponent> lines) {
-        StringBuilder lineBuilder = new StringBuilder();
+        ComponentBuilder lineBuilder = new ComponentBuilder();
         int totalWidth = 0;
         for (TextComponent line : lines) {
             int width = MinecraftFont.Font.getWidth(line.toPlainText().replaceAll(regex, "...."));
@@ -69,10 +67,11 @@ public class MessageUtils {
                 totalWidth += width;
             } else {
                 sendFormattedMessage(player, new TextComponent(lineBuilder.toString()));
-                lineBuilder = new StringBuilder();
+                lineBuilder = new ComponentBuilder();
                 totalWidth = 0;
             }
         }
+        sendFormattedMessage(player, lineBuilder.create());
     }
 
     /**

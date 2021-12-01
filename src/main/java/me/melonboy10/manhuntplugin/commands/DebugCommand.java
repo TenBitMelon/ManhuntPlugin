@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 
 public class DebugCommand {
 
-    @Command(name = "", desc = "Used to debug the game", usage = "")
+    @Command(name = "", desc = "Used to debug the game")
     public void root(@Sender Player sender, Player player) {
 
        MessageUtils.Builder builder = new MessageUtils.Builder(sender)

@@ -15,11 +15,7 @@ public class JoinCommand {
         if (!ManhuntGameManager.isPlayerInGame(sender)) {
             ManhuntGame game = ManhuntGameManager.getGame(gameID);
             if (game != null) {
-                if (game.getInvitedPlayers().contains(sender) && game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.PRIVATE)) {
-                    game.playerAcceptInvite(sender.getPlayer());
-                } else {
-                    MessageUtils.sendError(sender, "You are not invited!");
-                }
+                game.playerAcceptInvite(sender.getPlayer());
             } else {
                 MessageUtils.sendError(sender, "That game doesn't exist!");
             }
