@@ -237,7 +237,6 @@ public class CreateGameMenu extends Menu {
                 ChatColor.DARK_GRAY + " - " + (settings.getDifficulty() == Difficulty.EASY ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Easy",
                 ChatColor.DARK_GRAY + " - " + (settings.getDifficulty() == Difficulty.NORMAL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Normal",
                 ChatColor.DARK_GRAY + " - " + (settings.getDifficulty() == Difficulty.HARD ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Hard",
-                ChatColor.DARK_GRAY + " - " + (settings.getDifficulty() == Difficulty.PEACEFUL ? ChatColor.DARK_AQUA : ChatColor.GRAY) + "Peaceful",
                 "",
                 ChatColor.YELLOW + "Click to toggle!"
             ));
@@ -335,17 +334,14 @@ public class CreateGameMenu extends Menu {
 
     private Difficulty getNextDifficulty(Difficulty difficulty) {
         switch (difficulty) {
-            case EASY -> {
-                return Difficulty.NORMAL;
-            }
             case NORMAL -> {
                 return Difficulty.HARD;
             }
             case HARD -> {
-                return Difficulty.PEACEFUL;
+                return Difficulty.EASY;
             }
             default -> {
-                return Difficulty.EASY;
+                return Difficulty.NORMAL;
             }
         }
     }
