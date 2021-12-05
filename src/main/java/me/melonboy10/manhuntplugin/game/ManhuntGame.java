@@ -438,7 +438,10 @@ public class ManhuntGame {
     /** GETTERS */
 
     public boolean isWorldReady() {
-        return getOverworld() != null && Bukkit.getWorld(getOverworld().getUID()) != null;
+        return worldManager != null &&
+            getOverworld() != null && Bukkit.getWorld(getOverworld().getUID()) != null &&
+            getNether() != null && Bukkit.getWorld(getNether().getUID()) != null &&
+            getEnd() != null && Bukkit.getWorld(getEnd().getUID()) != null;
     }
 
     public boolean isDragonDead() {

@@ -61,7 +61,7 @@ public class MessageUtils {
         ComponentBuilder lineBuilder = new ComponentBuilder();
         int totalWidth = 0;
         for (TextComponent line : lines) {
-            int width = MinecraftFont.Font.getWidth(line.toPlainText().replaceAll(regex, "...."));
+            int width = MinecraftFont.Font.getWidth(ChatColor.stripColor(line.toPlainText().replaceAll(regex, "....")));
             if (totalWidth + width < MAX_LENGTH) {
                 lineBuilder.append(line);
                 totalWidth += width;

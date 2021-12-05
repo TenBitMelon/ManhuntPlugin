@@ -54,10 +54,10 @@ public final class ManhuntPlugin extends JavaPlugin {
             operatingSystem = OS.WINDOWS;
         } else if (os.contains("mac")) {
             operatingSystem = OS.MAC;
-        } else if (os.contains("linux")) {
-            operatingSystem = OS.LINUS;
         } else if (os.contains("cent")) {
             operatingSystem = OS.CENTOS;
+        } else if (os.contains("linux")) {
+            operatingSystem = OS.LINUS;
         } else {
             System.out.println(ChatColor.RED + "No OS detected! You are using " + os + ", and it is not supported!");
         }

@@ -20,6 +20,12 @@ public class ManhuntGameWorldManager {
         this.end = end;
     }
 
+    public ManhuntGameWorldManager() {
+        overworld = null;
+        nether = null;
+        end = null;
+    }
+
     public void removeWorlds() {
         Bukkit.unloadWorld(overworld, false);
         Bukkit.unloadWorld(nether, false);
