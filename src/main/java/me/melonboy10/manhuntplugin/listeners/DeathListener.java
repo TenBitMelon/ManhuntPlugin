@@ -45,6 +45,7 @@ public class DeathListener implements Listener {
             if (game != null) {
                 game.checkWinConditions();
             } else {
+                assert player != null;
                 player.sendMessage(ChatColor.GRAY + "" + ChatColor.ITALIC + "How did you just kill an Ender Dragon!?!");
             }
         }

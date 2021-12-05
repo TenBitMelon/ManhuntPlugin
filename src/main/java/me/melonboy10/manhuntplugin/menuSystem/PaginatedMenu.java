@@ -2,19 +2,30 @@ package me.melonboy10.manhuntplugin.menuSystem;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
-
-import java.util.ArrayList;
+import org.bukkit.event.inventory.InventoryClickEvent;
 
 public abstract class PaginatedMenu extends Menu {
 
     protected int page = 0;
-    protected int maxItemsPerPage = 28;
-    protected int index = 0;
-    private ArrayList<ItemStack> menuItems;
+    protected final int maxItemsPerPage = 28;
 
     public PaginatedMenu() {
         super();
+    }
+
+    @Override
+    public void clickEvent(InventoryClickEvent event) {
+        switch (event.getSlot()) {
+            case 49 -> event.getWhoClicked().closeInventory();
+            case 48 -> {
+                if (page != 0) page--;
+                setMenuItems();
+            }
+            case 50 -> {
+                page++;
+                setMenuItems();
+            }
+        }
     }
 
     //Set the border and menu buttons for the menu

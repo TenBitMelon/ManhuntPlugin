@@ -7,14 +7,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
 
 public class TeamSelectMenu extends Menu {
 
@@ -55,11 +47,6 @@ public class TeamSelectMenu extends Menu {
                 new GamesListMenu().open(player);
             }
         }
-    }
-
-    @Override
-    public void closeMenu(InventoryCloseEvent event) {
-
     }
 
     @Override

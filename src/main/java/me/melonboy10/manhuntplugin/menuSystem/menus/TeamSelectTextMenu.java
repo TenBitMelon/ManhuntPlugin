@@ -28,7 +28,7 @@ public class TeamSelectTextMenu {
     private final String serializedMap;
     private int countDown = -1;
     private BukkitTask runnable;
-    private long timeCreated = System.currentTimeMillis();
+//    private final long timeCreated = System.currentTimeMillis();
 
     /**
      * This Object should be nulled once the game starts
@@ -39,14 +39,16 @@ public class TeamSelectTextMenu {
         this.players = game.getPlayers();
 
         StringBuilder builder = new StringBuilder("{display:{Name:'{\"text\":\"World Preview\",\"color\":\"yellow\",\"italic\":false}',Lore:[");
+        assert game.getMapItem().getItemMeta() != null;
         List<String> lores = game.getMapItem().getItemMeta().getLore();
+        assert lores != null;
         lores.remove(0);
         lores.remove(lores.size() - 1);
         for (String lore : lores) {
             builder.append("'[");
             for (String character : lore.split("(?<=\\G...............)")) {
                 String hex = character.substring(2, character.length() - 1).replaceAll(Character.toString(COLOR_CHAR), "");
-                builder.append("{\"text\":\"█\",\"color\":\"#" + hex + "\",\"italic\":false},");
+                builder.append("{\"text\":\"█\",\"color\":\"#").append(hex).append("\",\"italic\":false},");
             }
             builder.deleteCharAt(builder.length() - 1);
             builder.append("]',");
@@ -64,21 +66,22 @@ public class TeamSelectTextMenu {
 
     public void update() { // ☑☒⎆⎘♽
         for (Player player : players.keySet()) {
-            MessageUtils.sendEmptyLine(player);
-            MessageUtils.sendEmptyLine(player);
-            MessageUtils.sendEmptyLine(player);
-            MessageUtils.sendEmptyLine(player);
-            MessageUtils.sendEmptyLine(player);
-            MessageUtils.sendEmptyLine(player);
-            MessageUtils.sendEmptyLine(player);
-            MessageUtils.sendEmptyLine(player);
-            MessageUtils.sendEmptyLine(player);
-            MessageUtils.sendEmptyLine(player);
-            MessageUtils.sendEmptyLine(player);
-            MessageUtils.sendEmptyLine(player);
-            MessageUtils.sendLineBreak(player);
-            MessageUtils.sendBlankLine(player);
-            MessageUtils.sendFormattedMessage(player,
+            MessageUtils.Builder builder = new MessageUtils.Builder(player);
+            builder.emptyLine()
+            .emptyLine()
+            .emptyLine()
+            .emptyLine()
+            .emptyLine()
+            .emptyLine()
+            .emptyLine()
+            .emptyLine()
+            .emptyLine()
+            .emptyLine()
+            .emptyLine()
+            .emptyLine()
+            .lineBreak()
+            .blankLine()
+            .formattedMessage(
                 new ComponentBuilder("Status").color(ChatColor.AQUA)
                     .append(":  ").color(ChatColor.DARK_GRAY)
                     .append("  ♻  ").color(game.isWorldReady() ? ChatColor.GREEN : ChatColor.GRAY)
@@ -141,14 +144,11 @@ public class TeamSelectTextMenu {
                             ClickEvent.Action.RUN_COMMAND, "/ready"
                     ))
                     .create()
-            );
-            if ( countDown > 0) {
-                player.sendTitle("", ChatColor.GREEN + ">" + countDown + "<", 0, 20, 0);
-            }
-            MessageUtils.sendBlankLine(player);
-            MessageUtils.sendWrappedMessage(player, getPlayerList());
-            MessageUtils.sendBlankLine(player);
-            MessageUtils.sendFormattedMessage(player, new ComponentBuilder()
+            )
+            .blankLine()
+            .wrappedMessage(getPlayerList())
+            .blankLine()
+            .formattedMessage(new ComponentBuilder()
                 .append("Runner")
                     .color(GREEN.asBungee())
                     .event(new ClickEvent(
@@ -186,9 +186,12 @@ public class TeamSelectTextMenu {
                 .append(players.values().stream().filter(team -> team.equals(ManhuntGame.Team.SPECTATOR)).count() + "   ")
                     .color(GRAY.asBungee())
                 .create()
-            );
-            MessageUtils.sendBlankLine(player);
-            MessageUtils.sendLineBreak(player);
+            )
+            .blankLine()
+            .lineBreak();
+            if ( countDown > 0) {
+                player.sendTitle(".", ChatColor.GREEN + ">" + countDown + "<", 0, 20, 0);
+            }
             if (runnable == null && checkReady()) {
                 beginCountDown();
             }
@@ -234,19 +237,19 @@ public class TeamSelectTextMenu {
             boolean invitee = false;
             ManhuntGame.Team team = players.getOrDefault(player, ManhuntGame.Team.UNKNOWN);
             switch (team) {
-                case RUNNER -> builder.append(ChatColor.GREEN + player.getDisplayName());
-                case HUNTER -> builder.append(ChatColor.RED + player.getDisplayName());
-                case SPECTATOR -> builder.append(ChatColor.GRAY + player.getDisplayName());
+                case RUNNER -> builder.append(ChatColor.GREEN).append(player.getDisplayName());
+                case HUNTER -> builder.append(ChatColor.RED).append(player.getDisplayName());
+                case SPECTATOR -> builder.append(ChatColor.GRAY).append(player.getDisplayName());
                 default -> {
-                    builder.append(ChatColor.DARK_GRAY + player.getDisplayName());
+                    builder.append(ChatColor.DARK_GRAY).append(player.getDisplayName());
                     invitee = true;
                 }
             }
             if (!invitee) {
                 if (readyPlayers.contains(player)) {
-                    builder.append(ChatColor.DARK_GRAY + " : " + ChatColor.GREEN + "☑ ");
+                    builder.append(ChatColor.DARK_GRAY).append(" : ").append(ChatColor.GREEN).append("☑ ");
                 } else {
-                    builder.append(ChatColor.DARK_GRAY + " : " + ChatColor.RED + "☒ ");
+                    builder.append(ChatColor.DARK_GRAY).append(" : ").append(ChatColor.RED).append("☒ ");
                 }
             }
 
@@ -271,10 +274,6 @@ public class TeamSelectTextMenu {
         return players.get(player);
     }
 
-    public long getTimeInMenu() {
-        return System.currentTimeMillis() - timeCreated;
-    }
-
     /**
      * Puts a player on a team
      * This does no checks to see if the game state is correct
@@ -283,14 +282,16 @@ public class TeamSelectTextMenu {
      * @param team team the player is joining
      */
     public void playerJoinTeam(Player player, ManhuntGame.Team team) {
-        if (game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.PRIVATE) || game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)) {
-            if (invitedPlayers().contains(player)) {
+        if (game.getState().equals(ManhuntGame.GameState.GENERATING)) {
+            if (game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.PRIVATE) || game.getSettings().getPrivacy().equals(ManhuntGameSettings.Privacy.SPECTATOR_ONLY)) {
+                if (invitedPlayers().contains(player)) {
+                    players.put(player, team);
+                }
+            } else {
                 players.put(player, team);
             }
-        } else {
-            players.put(player, team);
+            update();
         }
-        update();
     }
 
     public void playerReady(Player player) {

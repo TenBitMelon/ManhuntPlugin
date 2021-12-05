@@ -12,7 +12,7 @@ import java.util.HashMap;
 
 public class CreateGameCommand {
 
-    public static HashMap<Player, CreateGameMenu> playerMenuMap = new HashMap<>();
+    public static final HashMap<Player, CreateGameMenu> playerMenuMap = new HashMap<>();
 
     @Command(name = "", desc = "Create a new game")
     public void root(@Sender Player player, @OptArg(" ") String seed) {

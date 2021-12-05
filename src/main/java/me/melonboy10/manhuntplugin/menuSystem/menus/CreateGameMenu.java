@@ -13,7 +13,6 @@ import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.MapMeta;
@@ -82,9 +81,7 @@ public class CreateGameMenu extends Menu {
 //            Seed TODO: Add a favorite seeds menu
             case 12 -> {
                 switch (event.getClick()) {
-                    case LEFT, SHIFT_LEFT, MIDDLE, DROP, CONTROL_DROP, CREATIVE, SWAP_OFFHAND -> {
-                        settings.setSeed(new Random().nextLong());
-                    }
+                    case LEFT, SHIFT_LEFT, MIDDLE, DROP, CONTROL_DROP, CREATIVE, SWAP_OFFHAND -> settings.setSeed(new Random().nextLong());
                     case RIGHT, SHIFT_RIGHT -> {
                         AnvilGUI.Builder builder = new AnvilGUI.Builder();
                         builder
@@ -92,17 +89,13 @@ public class CreateGameMenu extends Menu {
                             .text("Enter Seed")
                             .title("Enter the world seed!")
                             .plugin(plugin)
-                            .onClose(player1 -> {
-                                new BukkitRunnable() {
-                                    @Override
-                                    public void run() {
-                                        open(player);
-                                    }
-                                }.runTaskLater(plugin, 1);
-                            })
-                            .onLeftInputClick((player1 -> {
-                                player1.openInventory(this.inventory);
-                            }))
+                            .onClose(player1 -> new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    open(player);
+                                }
+                            }.runTaskLater(plugin, 1))
+                            .onLeftInputClick((player1 -> player1.openInventory(this.inventory)))
                             .onComplete((player1, text) -> {
                                 settings.setSeed(text);
                                 return AnvilGUI.Response.openInventory(this.inventory);
@@ -119,11 +112,12 @@ public class CreateGameMenu extends Menu {
                 ItemStack map = new ItemStack(Material.FILLED_MAP);
                 MapMeta mapMeta = (MapMeta) map.getItemMeta();
 
+                assert mapMeta != null;
                 mapMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, "viewing-map"), PersistentDataType.INTEGER, 1);
 
-                MapView view = Bukkit.getMap(0);
+                @SuppressWarnings("deprecation") MapView view = Bukkit.getMap(0);
                 if (view == null)
-                    view = Bukkit.createMap(Bukkit.getWorld("world"));
+                    view = Bukkit.createMap(Bukkit.getWorlds().get(0));
                 view.setTrackingPosition(false);
                 view.setUnlimitedTracking(false);
                 view.setLocked(true);
@@ -144,18 +138,10 @@ public class CreateGameMenu extends Menu {
 //            Hunter Delay
             case 15 -> {
                 switch (event.getClick()) {
-                    case LEFT, MIDDLE, DROP, SWAP_OFFHAND, CONTROL_DROP -> {
-                        settings.setHunterCooldown(settings.getHunterCooldown() + 1);
-                    }
-                    case SHIFT_LEFT -> {
-                        settings.setHunterCooldown(settings.getHunterCooldown() + 10);
-                    }
-                    case SHIFT_RIGHT -> {
-                        settings.setHunterCooldown(Math.max(settings.getHunterCooldown() - 10, 0));
-                    }
-                    case RIGHT -> {
-                        settings.setHunterCooldown(Math.max(settings.getHunterCooldown() - 1, 0));
-                    }
+                    case LEFT, MIDDLE, DROP, SWAP_OFFHAND, CONTROL_DROP -> settings.setHunterCooldown(settings.getHunterCooldown() + 1);
+                    case SHIFT_LEFT -> settings.setHunterCooldown(settings.getHunterCooldown() + 10);
+                    case SHIFT_RIGHT -> settings.setHunterCooldown(Math.max(settings.getHunterCooldown() - 10, 0));
+                    case RIGHT -> settings.setHunterCooldown(Math.max(settings.getHunterCooldown() - 1, 0));
                 }
                 setMenuItems();
             }
@@ -178,9 +164,7 @@ public class CreateGameMenu extends Menu {
                                 }.runTaskLater(plugin, 1);
                                 player1.openInventory(this.inventory);
                             }))
-                            .onLeftInputClick((player1 -> {
-                                player1.openInventory(this.inventory);
-                            }))
+                            .onLeftInputClick((player1 -> player1.openInventory(this.inventory)))
                             .onComplete((player1, text) -> {
                                 Player player2 = Bukkit.getPlayerExact(text);
                                 if (player2 != null && player2.isOnline()) {
@@ -214,11 +198,6 @@ public class CreateGameMenu extends Menu {
                 }
             }
         }
-    }
-
-    @Override
-    public void closeMenu(InventoryCloseEvent event) {
-
     }
 
     @Override
@@ -425,11 +404,12 @@ public class CreateGameMenu extends Menu {
                 builder = new StringBuilder();
             }
             Color color = rgb.get(i);
-            builder.append(net.md_5.bungee.api.ChatColor.of(color) + "█");
+            builder.append(net.md_5.bungee.api.ChatColor.of(color)).append("█");
         }
 
         ItemStack item = new ItemStack(Material.FILLED_MAP);
         ItemMeta meta = item.getItemMeta();
+        assert meta != null;
         meta.setDisplayName(ChatColor.YELLOW + "World Preview");
 
         worldLore.set(0, ChatColor.DARK_GRAY + "Generation");

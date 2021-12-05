@@ -20,7 +20,8 @@ public final class ManhuntPlugin extends JavaPlugin {
     public static ManhuntPlugin plugin;
     public static World hubWorld;
 
-    public enum OS {WINDOWS, MAC, LINUS, CENTOS};
+    public enum OS {WINDOWS, MAC, LINUS, CENTOS}
+
     public static OS operatingSystem = null;
 
     public static ItemStack currentGamesItem;
