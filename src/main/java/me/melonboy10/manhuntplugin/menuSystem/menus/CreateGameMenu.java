@@ -9,6 +9,7 @@ import me.melonboy10.manhuntplugin.maps.MapListener;
 import me.melonboy10.manhuntplugin.menuSystem.Menu;
 import me.melonboy10.manhuntplugin.utils.PlayerListCollector;
 import net.wesjd.anvilgui.AnvilGUI;
+import org.apache.commons.lang.time.StopWatch;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -26,6 +27,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -340,6 +342,9 @@ public class CreateGameMenu extends Menu {
     }
 
     private ItemStack createMapItem() {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
         File finder;
         switch (ManhuntPlugin.operatingSystem) {
             case WINDOWS -> finder = new File(plugin.getDataFolder().getPath() + "/generateMapPreview_windows");
@@ -416,6 +421,9 @@ public class CreateGameMenu extends Menu {
         worldLore.add(ChatColor.YELLOW + "Click to enlarge!");
         meta.setLore(worldLore);
         item.setItemMeta(meta);
+
+        stopWatch.stop();
+        System.out.println("New map image generated in " + stopWatch.getTime() + "ms");
 
         return item;
     }

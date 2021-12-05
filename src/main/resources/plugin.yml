@@ -1,14 +1,9 @@
 name: ManhuntPlugin
 version: ${project.version}
 main: me.melonboy10.manhuntplugin.ManhuntPlugin
-api-version: 1.17
+api-version: 1.18
 authors: [melonboy10, Enderlord0042]
 description: Manhunt plugin
 
 depend:
     - drink
-
-commands:
-    create:
-        description: Start a manhunt.
-        usage: /create
