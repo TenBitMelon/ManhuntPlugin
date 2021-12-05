@@ -11,6 +11,7 @@ import org.bukkit.event.player.PlayerPortalEvent;
 
 public class EnterPortalListener implements Listener {
 
+    //TODO: Move this to the ManhuntGameWorldManager
     @EventHandler
     public void onEntityPortal(EntityPortalEvent event) {
         World world = event.getEntity().getWorld();

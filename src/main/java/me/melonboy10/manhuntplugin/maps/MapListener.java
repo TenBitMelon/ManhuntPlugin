@@ -20,8 +20,8 @@ import java.util.ArrayList;
 
 public class MapListener implements Listener {
 
-    private ManhuntPlugin plugin = ManhuntPlugin.plugin;
-    private static ArrayList<Player> playersWithItem = new ArrayList<>();
+    private final ManhuntPlugin plugin = ManhuntPlugin.plugin;
+    private static final ArrayList<Player> playersWithItem = new ArrayList<>();
 
     public MapListener() {}
 

@@ -27,15 +27,15 @@ public class MessageUtils {
         player.sendMessage(ChatColor.GREEN + "⚠ " + message + ChatColor.GREEN + " ⚠");
     }
 
-    public static void sendLineBreak(Player player) {
+    private static void sendLineBreak(Player player) {
         player.sendMessage(ChatColor.YELLOW + "+-----------------------------------------+");
     }
 
-    public static void sendFormattedMessage(Player player, BaseComponent[] line) {
+    private static void sendFormattedMessage(Player player, BaseComponent[] line) {
         sendFormattedMessage(player, flattenComponents(line));
     }
 
-    public static void sendFormattedMessage(Player player, TextComponent line) {
+    private static void sendFormattedMessage(Player player, TextComponent line) {
         int width = MinecraftFont.Font.getWidth(ChatColor.stripColor(line.toPlainText())
             .replaceAll(regex, "...."));
         if (width > MAX_LENGTH) {
@@ -57,7 +57,7 @@ public class MessageUtils {
         }
     }
 
-    public static void sendWrappedMessage(Player player, ArrayList<TextComponent> lines) {
+    private static void sendWrappedMessage(Player player, ArrayList<TextComponent> lines) {
         ComponentBuilder lineBuilder = new ComponentBuilder();
         int totalWidth = 0;
         for (TextComponent line : lines) {
@@ -76,9 +76,8 @@ public class MessageUtils {
 
     /**
      * sends a wrapped empty string
-     * @param player
      */
-    public static void sendBlankLine(Player player) {
+    private static void sendBlankLine(Player player) {
         sendFormattedMessage(player, new TextComponent(""));
     }
 
@@ -94,52 +93,45 @@ public class MessageUtils {
      * Sends a blank string to the player
      * If looking for the line wiht bars use
      * sendBLankLine()
-     * @param player
      */
-    public static void sendEmptyLine(Player player) {
+    private static void sendEmptyLine(Player player) {
         player.sendMessage("");
     }
 
-    public static class Builder {
+    public record Builder(Player player) {
 
-        Player player;
-
-        public Builder(Player player) {
-            this.player = player;
-        }
-
-        public Builder blank() {
-            sendBlankLine(player);
+        public Builder blankLine() {
+            MessageUtils.sendBlankLine(player);
             return this;
         }
 
         public Builder lineBreak() {
-            sendLineBreak(player);
+            MessageUtils.sendLineBreak(player);
             return this;
         }
 
-        public Builder formatted(BaseComponent[] line) {
-            sendFormattedMessage(player, line);
+        public Builder emptyLine() {
+            MessageUtils.sendEmptyLine(player);
             return this;
         }
 
-        public Builder formatted(String line) {
-            sendFormattedMessage(player, new TextComponent(line));
+        public Builder formattedMessage(BaseComponent[] line) {
+            MessageUtils.sendFormattedMessage(player, line);
             return this;
         }
 
-        public Builder formatted(TextComponent line) {
-            sendFormattedMessage(player, line);
+        public Builder wrappedMessage(ArrayList<TextComponent> lines) {
+            MessageUtils.sendWrappedMessage(player, lines);
             return this;
         }
 
-        public Builder wrapped(ArrayList<TextComponent> line) {
-            sendWrappedMessage(player, line);
+        public Builder formattedMessage(TextComponent line) {
+            MessageUtils.sendFormattedMessage(player, line);
             return this;
         }
 
         public Builder keyVal(String key, Object value) {
-            sendFormattedMessage(player, new TextComponent(ChatColor.AQUA + key + ": " + (value != null ? ChatColor.WHITE : ChatColor.GRAY) + value));
+            MessageUtils.sendFormattedMessage(player, new TextComponent(ChatColor.AQUA + key + ": " + (value != null ? ChatColor.WHITE : ChatColor.GRAY) + value));
             return this;
         }
     }

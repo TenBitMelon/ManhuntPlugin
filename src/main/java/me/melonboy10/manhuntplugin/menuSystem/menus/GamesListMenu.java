@@ -9,11 +9,8 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,9 +29,7 @@ public class GamesListMenu extends PaginatedMenu {
 
     @Override
     public void clickEvent(InventoryClickEvent event) {
-        if(event.getSlot() == 49) {
-            event.getWhoClicked().closeInventory();
-        }
+        super.clickEvent(event);
         if (event.getCurrentItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "game-id"), PersistentDataType.INTEGER)) {
             int gameId = event.getCurrentItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "game-id"), PersistentDataType.INTEGER);
             ((Player) event.getWhoClicked()).performCommand("join " + gameId);
@@ -42,17 +37,12 @@ public class GamesListMenu extends PaginatedMenu {
     }
 
     @Override
-    public void closeMenu(InventoryCloseEvent event) {
-
-    }
-
-    @Override
     public void setMenuItems() {
         addMenuBorder(true);
 
         //show game
-        //dont show if private
-        //dont show if over
+        //don't show if private
+        //don't show if over
         //sort by public then spec only
         //sort by game time
 

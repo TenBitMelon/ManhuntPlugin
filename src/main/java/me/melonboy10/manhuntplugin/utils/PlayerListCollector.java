@@ -19,7 +19,7 @@ public class PlayerListCollector implements Collector<Player, StringBuilder, Str
 
     @Override
     public BiConsumer<StringBuilder, Player> accumulator() {
-        return (stringBuilder, player) -> stringBuilder.append(ChatColor.DARK_GRAY + "- " + ChatColor.GRAY + player.getName() + "\n");
+        return (stringBuilder, player) -> stringBuilder.append(ChatColor.DARK_GRAY).append("- ").append(ChatColor.GRAY).append(player.getName()).append("\n");
     }
 
     @Override

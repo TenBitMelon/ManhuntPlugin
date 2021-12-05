@@ -39,14 +39,6 @@ public class ManhuntGameManager {
         return playerToGame.containsKey(player);
     }
 
-    public static HashMap<Player, ManhuntGame> getPlayerToGame() {
-        return playerToGame;
-    }
-
-    public static boolean isPlayerInGame(Player player, ManhuntGame manhuntGame) {
-        return !playerToGame.get(player).equals(manhuntGame);
-    }
-
     public static void playerLeaveGame(Player player) {
         playerToGame.remove(player);
     }

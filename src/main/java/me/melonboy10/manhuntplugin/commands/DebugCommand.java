@@ -15,13 +15,13 @@ public class DebugCommand {
 
        MessageUtils.Builder builder = new MessageUtils.Builder(sender)
            .lineBreak()
-           .blank()
+           .blankLine()
            .keyVal("Player", player.getName())
            .keyVal("Is player in game", ManhuntGameManager.isPlayerInGame(player));
        if (ManhuntGameManager.isPlayerInGame(player)) {
            ManhuntGame game = ManhuntGameManager.getGame(player);
            builder
-               .blank()
+               .blankLine()
                .keyVal("Game id", game.hashCode())
                .keyVal("Game state", game.getState())
                .keyVal("Is world ready", game.isWorldReady())
@@ -30,7 +30,7 @@ public class DebugCommand {
            if (game.getTeamTextMenu() != null) {
                TeamSelectTextMenu textMenu = game.getTeamTextMenu();
                builder
-                   .blank()
+                   .blankLine()
                    .keyVal("Team Text Menu", textMenu)
                    .keyVal("Players", textMenu.getPlayers());
            }
