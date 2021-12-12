@@ -31,7 +31,6 @@ public abstract class Menu implements InventoryHolder {
 
     public abstract void clickEvent(InventoryClickEvent event);
 
-    @SuppressWarnings({"EmptyMethod", "unused"})
 //    public abstract void closeMenu(InventoryCloseEvent event);
 
     public abstract void setMenuItems();

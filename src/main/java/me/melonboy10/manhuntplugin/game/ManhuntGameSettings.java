@@ -15,7 +15,7 @@ public class ManhuntGameSettings {
     private long seed = new Random().nextLong();
     private WorldType worldType = WorldType.NORMAL;
     private Difficulty difficulty = Difficulty.NORMAL;
-    private int hunterCooldown = 10;
+    private int hunterCooldown = 20;
     private Privacy privacy = Privacy.PRIVATE;
 
     public ManhuntGameSettings() {}

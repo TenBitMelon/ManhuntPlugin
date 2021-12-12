@@ -251,6 +251,7 @@ public class CreateGameMenu extends Menu {
 
         if (worldChange) {
             inventory.setItem(13, createMapItem());
+            worldChange = false;
         }
 
         inventory.setItem(14, makeItem(switch (settings.getPrivacy()) {

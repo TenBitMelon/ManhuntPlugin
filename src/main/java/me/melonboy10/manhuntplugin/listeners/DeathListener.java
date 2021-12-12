@@ -23,6 +23,9 @@ public class DeathListener implements Listener {
             if (game != null) {
                 event.getDrops().removeIf(itemStack -> itemStack.getType().equals(Material.COMPASS));
                 Location deathLocation = event.getEntity().getLocation();
+                if (event.getEntity().getBedSpawnLocation() == null) {
+                    event.getEntity().setBedSpawnLocation(game.getOverworld().getSpawnLocation(), true);
+                }
                 new BukkitRunnable() {
                     @Override
                     public void run() {

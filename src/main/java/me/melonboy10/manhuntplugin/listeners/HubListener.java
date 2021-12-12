@@ -5,16 +5,18 @@ import me.melonboy10.manhuntplugin.menuSystem.menus.GameHistoryMenu;
 import me.melonboy10.manhuntplugin.menuSystem.menus.GamesListMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.*;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
-public class HubItemListener implements Listener {
+public class HubListener implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
@@ -59,6 +61,13 @@ public class HubItemListener implements Listener {
                 case WRITTEN_BOOK -> new GameHistoryMenu().open(player);
                 case GOLDEN_SWORD -> Bukkit.dispatchCommand(player, "create");
             }
+        }
+    }
+
+    @EventHandler
+    public void onBlockUpdate(BlockPhysicsEvent event) {
+        if (event.getBlock().getType().equals(Material.GLOW_LICHEN)) {
+            event.setCancelled(true);
         }
     }
 
