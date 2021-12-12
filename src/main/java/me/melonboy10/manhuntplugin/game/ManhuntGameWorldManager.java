@@ -20,12 +20,6 @@ public class ManhuntGameWorldManager {
         this.end = end;
     }
 
-    public ManhuntGameWorldManager() {
-        overworld = null;
-        nether = null;
-        end = null;
-    }
-
     public void removeWorlds() {
         Bukkit.unloadWorld(overworld, false);
         Bukkit.unloadWorld(nether, false);
@@ -35,14 +29,18 @@ public class ManhuntGameWorldManager {
         Bukkit.getServer().getWorlds().remove(nether);
         Bukkit.getServer().getWorlds().remove(end);
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!deleteDirectory(overworld.getWorldFolder())) System.out.println("Overworld was not deleted | " + this.hashCode());
-                if (!deleteDirectory(nether.getWorldFolder())) System.out.println("Nether was not deleted | " + this.hashCode());
-                if (!deleteDirectory(end.getWorldFolder())) System.out.println("End was not deleted | " + this.hashCode());
-            }
-        }.runTaskLater(plugin, 40);
+        deleteDirectory(overworld.getWorldFolder());
+        deleteDirectory(nether.getWorldFolder());
+        deleteDirectory(end.getWorldFolder());
+
+//        new BukkitRunnable() {
+//            @Override
+//            public void run() {
+//                if (!deleteDirectory(overworld.getWorldFolder())) System.out.println("Overworld was not deleted | " + this.hashCode());
+//                if (!deleteDirectory(nether.getWorldFolder())) System.out.println("Nether was not deleted | " + this.hashCode());
+//                if (!deleteDirectory(end.getWorldFolder())) System.out.println("End was not deleted | " + this.hashCode());
+//            }
+//        }.runTaskLater(plugin, 40);
     }
 
     private boolean deleteDirectory(File directoryToBeDeleted) {

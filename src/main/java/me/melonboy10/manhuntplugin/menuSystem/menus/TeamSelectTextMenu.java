@@ -241,7 +241,7 @@ public class TeamSelectTextMenu {
                 case HUNTER -> builder.append(ChatColor.RED).append(player.getDisplayName());
                 case SPECTATOR -> builder.append(ChatColor.GRAY).append(player.getDisplayName());
                 default -> {
-                    builder.append(ChatColor.DARK_GRAY).append(player.getDisplayName());
+                    builder.append(ChatColor.DARK_GRAY).append(player.getDisplayName()).append(" ");
                     invitee = true;
                 }
             }

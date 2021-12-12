@@ -66,7 +66,7 @@ public class MessageUtils {
                 lineBuilder.append(line);
                 totalWidth += width;
             } else {
-                sendFormattedMessage(player, new TextComponent(lineBuilder.toString()));
+                sendFormattedMessage(player, new TextComponent(lineBuilder.create()));
                 lineBuilder = new ComponentBuilder();
                 totalWidth = 0;
             }

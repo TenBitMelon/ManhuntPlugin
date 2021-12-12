@@ -52,7 +52,6 @@
                 <version>2.3.1</version>
                 <configuration>
                     <outputDirectory>C:\Users\Aidan\Desktop\Minecraft Servers\Spigot-Paper Server (Manhunt Plugin)\plugins</outputDirectory>
-<!--                    <outputDirectory>C:\Users\Aidan\Desktop\Minecraft Servers\Waterfall Server (Manhunt Plugin)\2. Hub\plugins</outputDirectory>-->
                 </configuration>
             </plugin>
         </plugins>
@@ -107,7 +106,7 @@
         <dependency>
             <groupId>net.wesjd</groupId>
             <artifactId>anvilgui</artifactId>
-            <version>1.5.1-SNAPSHOT</version>
+            <version>1.5.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.jonahseguin</groupId>

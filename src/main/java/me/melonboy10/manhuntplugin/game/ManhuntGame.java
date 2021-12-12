@@ -150,8 +150,6 @@ public class ManhuntGame {
                 .lineBreak()
                 .blankLine()
                 .formattedMessage(new TextComponent(ChatColor.GREEN + "You have been invited to a new Manhunt!"))
-                .blankLine()
-                .formattedMessage(new TextComponent(ChatColor.GREEN + "You have been invited to a new Manhunt!"))
                 .blankLine();
             if (ManhuntGameManager.isPlayerInGame(player)) {
                 builder.formattedMessage(new TextComponent(ChatColor.RED + "You are already in a game so to join you"))

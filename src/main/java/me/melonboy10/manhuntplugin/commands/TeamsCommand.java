@@ -24,11 +24,7 @@ public class TeamsCommand{
         if (ManhuntGameManager.isPlayerInGame(player)) {
             ManhuntGame game = ManhuntGameManager.getGame(player);
             if (game.getState().equals(ManhuntGame.GameState.GENERATING)) {
-                if (game.getInvitedPlayers().contains(player)) {
-                    game.getTeamTextMenu().playerJoinTeam(player, ManhuntGame.Team.RUNNER);
-                } else {
-                    MessageUtils.sendError(player, "You are not invited!");
-                }
+                game.getTeamTextMenu().playerJoinTeam(player, ManhuntGame.Team.RUNNER);
             }
         } else {
             MessageUtils.sendError(player, "You are not in a game!");
@@ -40,11 +36,7 @@ public class TeamsCommand{
         if (ManhuntGameManager.isPlayerInGame(player)) {
             ManhuntGame game = ManhuntGameManager.getGame(player);
             if (game.getState().equals(ManhuntGame.GameState.GENERATING)) {
-                if (game.getInvitedPlayers().contains(player)) {
-                    game.getTeamTextMenu().playerJoinTeam(player, ManhuntGame.Team.HUNTER);
-                } else {
-                    MessageUtils.sendError(player, "You are not invited!");
-                }
+                game.getTeamTextMenu().playerJoinTeam(player, ManhuntGame.Team.HUNTER);
             }
         } else {
             MessageUtils.sendError(player, "You are not in a game!");
@@ -56,11 +48,7 @@ public class TeamsCommand{
         if (ManhuntGameManager.isPlayerInGame(player)) {
             ManhuntGame game = ManhuntGameManager.getGame(player);
             if (game.getState().equals(ManhuntGame.GameState.GENERATING)) {
-                if (game.getInvitedPlayers().contains(player)) {
-                    game.getTeamTextMenu().playerJoinTeam(player, ManhuntGame.Team.SPECTATOR);
-                } else {
-                    MessageUtils.sendError(player, "You are not invited!");
-                }
+                game.getTeamTextMenu().playerJoinTeam(player, ManhuntGame.Team.SPECTATOR);
             }
         } else {
             MessageUtils.sendError(player, "You are not in a game!");

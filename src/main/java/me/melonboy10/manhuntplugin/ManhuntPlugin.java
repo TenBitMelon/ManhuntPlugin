@@ -2,8 +2,10 @@ package me.melonboy10.manhuntplugin;
 
 import com.jonahseguin.drink.CommandService;
 import com.jonahseguin.drink.Drink;
+import com.jonahseguin.drink.provider.spigot.PlayerProvider;
 import me.melonboy10.manhuntplugin.commands.*;
 import me.melonboy10.manhuntplugin.game.ManhuntGameManager;
+import me.melonboy10.manhuntplugin.game.ManhuntGameSettings;
 import me.melonboy10.manhuntplugin.listeners.*;
 import me.melonboy10.manhuntplugin.maps.MapListener;
 import me.melonboy10.manhuntplugin.menuSystem.Menu;
@@ -34,6 +36,8 @@ public final class ManhuntPlugin extends JavaPlugin {
         hubWorld = Bukkit.getWorld("world");
 
         CommandService drink = Drink.get(this);
+        drink.bind(ManhuntGameSettings.Privacy.class).toProvider(new PrivacyProvider());
+
         drink.register(new CreateGameCommand(), "create");
         drink.register(new DebugCommand(), "debugplayer");
         drink.register(new InviteCommand(), "invite");
@@ -42,6 +46,7 @@ public final class ManhuntPlugin extends JavaPlugin {
         drink.register(new ReadyCommand(), "ready");
         drink.register(new TeamsCommand(), "teams");
         drink.register(new SaveSeedCommand(), "saveseed");
+        drink.register(new SetPrivacyCommand(), "privacy");
         drink.registerCommands();
 
         registerListeners();
@@ -75,7 +80,7 @@ public final class ManhuntPlugin extends JavaPlugin {
         this.getServer().getPluginManager().registerEvents(new WorldLoadListener(), this);
         this.getServer().getPluginManager().registerEvents(new EnterPortalListener(), this);
         this.getServer().getPluginManager().registerEvents(new DropItemListener(), this);
-        this.getServer().getPluginManager().registerEvents(new HubItemListener(), this);
+        this.getServer().getPluginManager().registerEvents(new HubListener(), this);
         this.getServer().getPluginManager().registerEvents(new PlayerLeaveListener(), this);
         this.getServer().getPluginManager().registerEvents(new JoinServerListener(), this);
         this.getServer().getPluginManager().registerEvents(new DeathListener(), this);
