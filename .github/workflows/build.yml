@@ -30,7 +30,7 @@ jobs:
       - name: List
         run: ls
       - name: List2
-        run: cd ./target
+        run: cd target
       - name: List3
         run: ls
       - name: Upload Build Artifact
