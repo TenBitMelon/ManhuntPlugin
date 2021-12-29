@@ -51,7 +51,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.3.1</version>
                 <configuration>
-                    <outputDirectory>C:\Users\Aidan\Desktop\Minecraft Servers\Spigot-Paper Server (Manhunt Plugin)\plugins</outputDirectory>
+<!--                    <outputDirectory>C:\Users\Aidan\Desktop\Minecraft Servers\Spigot-Paper Server (Manhunt Plugin)\plugins</outputDirectory>-->
                 </configuration>
             </plugin>
         </plugins>
