@@ -27,14 +27,8 @@ jobs:
           distribution: 'adopt'
       - name: Build with Maven
         run: mvn package
-      - name: List
-        run: dir ./target
-      - name: List2
-        run: dir ../
-      - name: List3
-        run: dir /
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v2.2.4
         with:
           name: MahuntPlugin.jar
-          path: ./target/MahuntPlugin-*-SNAPSHOT.jar
+          path: ./target/ManhuntPlugin-*-SNAPSHOT.jar
