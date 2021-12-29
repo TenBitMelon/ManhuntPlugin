@@ -45,11 +45,11 @@ public class ManhuntGame {
     private final Player creator;
     private final ArrayList<Player> invitedPlayers = new ArrayList<>();
     private final HashMap<Player, Team> players = new HashMap<>();
-    private final HashMap<Player, PlayerInventory> quitPlayerInventory = new HashMap<>();
 
-    private final HashMap<Player, Location> quitPlayerLocation = new HashMap<>();
-    private final HashMap<Player, Team> quitPlayerTeam = new HashMap<>();
-    private final HashMap<Player, BukkitTask> quitPlayerTimer = new HashMap<>();
+    private final HashMap<UUID, PlayerInventory> quitPlayerInventory = new HashMap<>();
+    private final HashMap<UUID, Location> quitPlayerLocation = new HashMap<>();
+    private final HashMap<UUID, Team> quitPlayerTeam = new HashMap<>();
+    private final HashMap<UUID, BukkitTask> quitPlayerTimer = new HashMap<>();
     public ManhuntGame(ManhuntGameSettings settings, Player creator, LinkedList<Player> invitedPlayers, ItemStack item) {
         this.settings = settings;
         hunterCooldown = settings.getHunterCooldown();
@@ -77,6 +77,7 @@ public class ManhuntGame {
         }
         assert overworld != null;
         overworld.setDifficulty(settings.getDifficulty());
+        overworld.setAutoSave(false);
         setGameRules(overworld);
 
         World nether = new WorldCreator(this.hashCode() + "-nether")
@@ -87,6 +88,7 @@ public class ManhuntGame {
             .createWorld();
         assert nether != null;
         nether.setDifficulty(settings.getDifficulty());
+        nether.setAutoSave(false);
         setGameRules(nether);
 
         World end = new WorldCreator(this.hashCode() + "-end")
@@ -97,6 +99,7 @@ public class ManhuntGame {
             .createWorld();
         assert end != null;
         end.setDifficulty(settings.getDifficulty());
+        end.setAutoSave(false);
         setGameRules(end);
 
         worldManager = new ManhuntGameWorldManager(overworld, nether, end);
@@ -346,17 +349,17 @@ public class ManhuntGame {
     public void playerLeave(Player player) {
         Team team = getTeam(player);
         if (team.equals(Team.RUNNER) || team.equals(Team.HUNTER) && (!gameState.equals(GameState.GENERATING) && !gameState.equals(GameState.GAME_OVER))) {
-            quitPlayerInventory.put(player, player.getInventory());
-            quitPlayerLocation.put(player, player.getLocation());
-            quitPlayerTeam.put(player, getTeam(player));
+            quitPlayerInventory.put(player.getUniqueId(), player.getInventory());
+            quitPlayerLocation.put(player.getUniqueId(), player.getLocation());
+            quitPlayerTeam.put(player.getUniqueId(), getTeam(player));
 
-            quitPlayerTimer.put(player, new BukkitRunnable() {
+            quitPlayerTimer.put(player.getUniqueId(), new BukkitRunnable() {
                 @Override
                 public void run() {
-                    quitPlayerTimer.remove(player);
-                    quitPlayerInventory.remove(player);
-                    quitPlayerLocation.remove(player);
-                    quitPlayerTeam.remove(player);
+                    quitPlayerTimer.remove(player.getUniqueId());
+                    quitPlayerInventory.remove(player.getUniqueId());
+                    quitPlayerLocation.remove(player.getUniqueId());
+                    quitPlayerTeam.remove(player.getUniqueId());
                     checkWinConditions();
                 }
             }.runTaskLater(plugin, 5 * 60 * 20));
@@ -374,12 +377,12 @@ public class ManhuntGame {
                 teamWins(Team.RUNNER);
             } else if (
                 players.keySet().stream().noneMatch(player -> !player.getGameMode().equals(GameMode.SPECTATOR) && players.get(player).equals(Team.RUNNER)) &&
-                quitPlayerTeam.keySet().stream().noneMatch(player -> !player.getGameMode().equals(GameMode.SPECTATOR) && players.get(player).equals(Team.RUNNER))
+                quitPlayerTeam.keySet().stream().noneMatch(uuid -> !Bukkit.getPlayer(uuid).getGameMode().equals(GameMode.SPECTATOR) && players.get(Bukkit.getPlayer(uuid)).equals(Team.RUNNER))
             ) {
                 teamWins(Team.HUNTER);
             } else if (
                 players.keySet().stream().noneMatch(player -> !player.getGameMode().equals(GameMode.SPECTATOR) && players.get(player).equals(Team.HUNTER)) &&
-                quitPlayerTeam.keySet().stream().noneMatch(player -> !player.getGameMode().equals(GameMode.SPECTATOR) && players.get(player).equals(Team.HUNTER))
+                quitPlayerTeam.keySet().stream().noneMatch(uuid -> !Bukkit.getPlayer(uuid).getGameMode().equals(GameMode.SPECTATOR) && players.get(Bukkit.getPlayer(uuid)).equals(Team.HUNTER))
             ) {
                 teamWins(Team.RUNNER);
             }
