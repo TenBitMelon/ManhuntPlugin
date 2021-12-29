@@ -26,9 +26,9 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
       - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots verify
+        run: mvn package -f pom.xml
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v2.2.4
         with:
           name: MahuntPlugin.jar
-          path: ./target/MahuntPlugin-*-SNAPSHOT.jar
+          path: ./target/MahuntPlugin-*-SNAPSHOT-shaded.jar
