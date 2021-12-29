@@ -30,6 +30,8 @@ public class ManhuntGameSettings {
 
     public void setSeed(String seed) {
         try {
+            System.out.println(seed);
+            System.out.println(Long.parseLong(seed));
             setSeed(Long.parseLong(seed));
         } catch (Exception e) {
             setSeed(seed.hashCode());
